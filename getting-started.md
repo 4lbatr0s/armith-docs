@@ -19,7 +19,7 @@ Use one base URL per environment.
 
 ### Sandbox
 
-`https://sandbox-api.armith.com`
+`https://armith-backend-live.onrender.com`
 
 ### Production
 
@@ -49,11 +49,11 @@ Protected examples:
 
 1. Sign in to dashboard and open `Profile -> Security`
 2. Create API key and store it in your secret manager
-2. Call `POST /kyc/upload-url` for each required file
-3. Upload files directly to storage using returned pre-signed URL(s)
-4. Call `POST /kyc/id-check`
-5. Call `POST /kyc/selfie-check` with `profileId`
-6. Call `GET /kyc/status/:profileId` to get final state
+3. Call `POST /kyc/upload-url` for each required file
+4. Upload files directly to storage using returned pre-signed URL(s)
+5. Call `POST /kyc/id-check`
+6. Call `POST /kyc/selfie-check` with `profileId`
+7. Call `GET /kyc/status/:profileId` to get final state
 
 ## 5) First Health Checks
 

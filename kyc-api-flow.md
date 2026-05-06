@@ -5,7 +5,7 @@ This is the practical integration walkthrough for API-only KYC.
 ## Step 0 - Set your base URL
 
 ```bash
-export BASE_URL="https://api.armith.com"
+export BASE_URL="https://armith-backend-live.onrender.com"
 export API_KEY="<ARMITH_API_KEY>"
 ```
 

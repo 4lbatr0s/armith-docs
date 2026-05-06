@@ -6,10 +6,10 @@ info:
     Armith API-only KYC service.
     This specification documents the currently available REST endpoints.
 servers:
-  - url: http://localhost:3001
-    description: Local
   - url: https://armith-backend-live.onrender.com
-    description: Development (Render)
+    description: Sandbox
+  - url: https://api.armith.com
+    description: Production
 tags:
   - name: Health
   - name: Auth

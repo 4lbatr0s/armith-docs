@@ -5,11 +5,11 @@ export default {
     nav: [
       { text: 'Overview', link: '/' },
       { text: 'Quickstart', link: '/getting-started' },
-      { text: 'REST API', link: '/api-reference' }
+      { text: 'REST API Playground', link: '/api-reference' }
     ],
     sidebar: [
       {
-        text: 'Introduction',
+        text: 'Start Here',
         items: [
           { text: 'Overview', link: '/' },
           { text: 'Getting Started', link: '/getting-started' },
@@ -17,17 +17,17 @@ export default {
         ]
       },
       {
-        text: 'KYC API Flows',
+        text: 'Step-by-Step Journey',
         items: [
           { text: 'Flow Overview', link: '/kyc-flow-overview' },
           { text: 'Step-by-Step API Flow', link: '/kyc-api-flow' },
-          { text: 'Statuses and Errors', link: '/errors-and-statuses' }
+          { text: 'Statuses and Errors', link: '/errors-and-statuses' },
+          { text: 'REST API Playground', link: '/api-reference' }
         ]
       },
       {
-        text: 'Reference',
+        text: 'Dashboard APIs',
         items: [
-          { text: 'REST API Component', link: '/api-reference' },
           { text: 'Admin and Config APIs', link: '/admin-and-config-apis' }
         ]
       }

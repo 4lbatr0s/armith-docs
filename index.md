@@ -8,20 +8,18 @@ Armith is an **API-only** KYC platform.
 
 ## What This Documentation Covers
 
-1. How to authenticate requests
-2. How to create/manage API keys from the dashboard
-3. How to run the end-to-end KYC flow with API endpoints
-4. What each endpoint returns
-5. How to interpret statuses and error codes
-6. How to use admin and config endpoints
-7. Interactive REST API component for endpoint exploration
+1. Generate API key from dashboard
+2. Authenticate API requests correctly
+3. Complete KYC flow endpoint by endpoint
+4. Validate responses and handle outcomes
+5. Use live REST playground to send real requests
 
 ## Base URL
 
 Use your assigned API base URL:
 
+- Sandbox: `https://armith-backend-live.onrender.com`
 - Production: `https://api.armith.com`
-- Sandbox: `https://sandbox-api.armith.com`
 
 Ask Armith support for your tenant base URL if your account uses a dedicated domain.
 
@@ -36,10 +34,11 @@ The current implementation is built around this API flow:
 5. Run selfie verification
 6. Query profile status
 
-## Recommended Reading Order
+## Recommended Reading Order (Domino Flow)
 
 1. `Getting Started`
 2. `Authentication`
 3. `Flow Overview`
 4. `Step-by-Step API Flow`
-5. `REST API Component`
+5. `Statuses and Errors`
+6. `REST API Playground`

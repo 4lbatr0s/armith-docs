@@ -13,7 +13,7 @@ Armith currently does not support:
 - Official client SDKs
 - Drop-in UI widgets
 
-## End-to-End Flow
+## End-to-End Flow (Domino Sequence)
 
 ### Step 1: Discover rules and capabilities
 
@@ -53,6 +53,12 @@ Call `POST /kyc/selfie-check` with:
 ### Step 6: Query verification status
 
 Call `GET /kyc/status/:profileId` for consolidated profile state.
+
+### Step 7: Operationalize
+
+- Handle status transitions in your app
+- Trigger retries only on safe/system failures
+- Keep profileId in your audit logs
 
 ## Status Model
 
