@@ -9,11 +9,12 @@ Armith is an **API-only** KYC platform.
 ## What This Documentation Covers
 
 1. How to authenticate requests
-2. How to run the end-to-end KYC flow with API endpoints
-3. What each endpoint returns
-4. How to interpret statuses and error codes
-5. How to use admin and config endpoints
-6. Interactive REST API component for endpoint exploration
+2. How to create/manage API keys from the dashboard
+3. How to run the end-to-end KYC flow with API endpoints
+4. What each endpoint returns
+5. How to interpret statuses and error codes
+6. How to use admin and config endpoints
+7. Interactive REST API component for endpoint exploration
 
 ## Base URL
 
@@ -26,11 +27,12 @@ Use your environment-specific backend URL:
 
 The current implementation is built around this API flow:
 
-1. Request pre-signed upload URLs
-2. Upload ID and selfie images to object storage
-3. Run ID verification
-4. Run selfie verification
-5. Query profile status
+1. Sign in to dashboard and create API key
+2. Request pre-signed upload URLs
+3. Upload ID and selfie images to object storage
+4. Run ID verification
+5. Run selfie verification
+6. Query profile status
 
 ## Recommended Reading Order
 

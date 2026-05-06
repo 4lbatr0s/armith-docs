@@ -7,8 +7,9 @@ This page helps you go from zero to your first successful KYC verification reque
 Before calling Armith APIs, make sure you have:
 
 - A valid Armith backend base URL
-- A Clerk-authenticated user session (for protected endpoints)
-- Ability to send `Authorization: Bearer <token>` headers
+- A dashboard user account (for admin panel access)
+- An API key generated from dashboard settings (for direct API access)
+- Ability to send `x-api-key: <api_key>` headers
 - Ability to upload binary files to pre-signed URLs
 
 ## 2) Choose Environment
@@ -25,7 +26,10 @@ Use one base URL per environment.
 
 ## 3) Authentication Model
 
-Most KYC endpoints are protected and require Clerk auth.
+KYC endpoints support two auth modes:
+
+1. API key (recommended for production API integrations)
+2. User auth token from dashboard session (used by Armith dashboard)
 
 Public endpoints:
 
@@ -42,7 +46,7 @@ Protected examples:
 
 ## 4) Minimal Integration Checklist
 
-1. Obtain Clerk JWT token from your authenticated user
+1. Sign in to dashboard and create an API key from settings
 2. Call `POST /kyc/upload-url` for each required file
 3. Upload files directly to storage using returned pre-signed URL(s)
 4. Call `POST /kyc/id-check`
@@ -64,6 +68,7 @@ curl -X GET "https://armith-backend-live.onrender.com/kyc/countries"
 ## 6) Important Constraints
 
 - API-first only: no official SDK right now
+- API keys are shown once at creation time; store them securely
 - Image URLs must be valid and accessible by backend verification logic
 - If your active rules require both ID + selfie, `profileId` is mandatory for selfie step
 - CORS and auth must be configured correctly per environment

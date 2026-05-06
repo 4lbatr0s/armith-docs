@@ -6,7 +6,7 @@ This section describes non-core-flow endpoints used for operations and rule mana
 
 Base path: `/admin`
 
-All admin endpoints are authenticated.
+All admin endpoints require dashboard user authentication.
 
 ## 1) List verifications
 
@@ -47,6 +47,22 @@ Purpose:
 Purpose:
 
 - Reset settings to default preset values.
+
+## 6) API key lifecycle
+
+`GET /admin/api-keys`
+
+- List API keys (metadata only, no secret value).
+
+`POST /admin/api-keys`
+
+- Create a new API key.
+- Returns the raw key value once at creation time.
+
+`DELETE /admin/api-keys/:id`
+
+- Revoke an existing API key.
+- Revoked keys cannot authenticate KYC requests.
 
 ---
 
