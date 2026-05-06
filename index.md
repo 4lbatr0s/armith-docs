@@ -2,6 +2,14 @@
 
 Armith is an **API-only** KYC platform.
 
+<script setup>
+const appUrl = import.meta.env.VITE_APP_URL || 'http://localhost:3000';
+</script>
+
+<a :href="appUrl" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:12px 0;padding:10px 14px;border:1px solid #888;border-radius:6px;text-decoration:none;">
+  Uygulamaya Git
+</a>
+
 - We currently support KYC flows through **REST API endpoints**
 - We do **not** provide SDKs at this stage
 - You can integrate from any backend or frontend stack that can call HTTP APIs
