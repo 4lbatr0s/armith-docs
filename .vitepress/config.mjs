@@ -1,6 +1,20 @@
-export default {
+import { defineConfig } from 'vitepress';
+
+export default defineConfig({
   title: 'Armith Docs',
   description: 'API-first KYC documentation for Armith',
+  appearance: true,
+  head: [
+    ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
+    ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
+    [
+      'link',
+      {
+        rel: 'stylesheet',
+        href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700;800&display=swap'
+      }
+    ]
+  ],
   themeConfig: {
     nav: [
       { text: 'Overview', link: '/' },
@@ -33,4 +47,4 @@ export default {
       }
     ]
   }
-};
+});

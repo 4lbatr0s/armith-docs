@@ -1,0 +1,282 @@
+/**
+ * Armith docs — neo-brutalist visuals aligned with kyc-flow frontend (pm-* palette).
+ * VitePress variable reference: vitepress/theme-default/styles/vars.css
+ */
+
+:root {
+  --armith-paper: #f0ebe3;
+  --armith-wash: #e4ddd4;
+  --armith-surface: #faf8f5;
+  --armith-ink: #0c0c0c;
+  --armith-accent: #e4007a;
+  --armith-accent-alt: #00c9b7;
+  --armith-muted: #5e5952;
+  --armith-brutal-shadow: 5px 5px 0 0 var(--armith-ink);
+  --armith-brutal-radius: 2px;
+}
+
+.dark {
+  --armith-paper: #09090b;
+  --armith-wash: #161618;
+  --armith-surface: #121214;
+  --armith-ink: #f5f2eb;
+  --armith-brutal-shadow: 5px 5px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+/* --- Brand magenta (replacing default indigo) --- */
+:root {
+  --vp-c-brand-1: #b80057;
+  --vp-c-brand-2: #e4007a;
+  --vp-c-brand-3: #c2005f;
+  --vp-c-brand-soft: rgba(228, 0, 122, 0.14);
+}
+
+.dark {
+  --vp-c-brand-1: #ff4da0;
+  --vp-c-brand-2: #e4007a;
+  --vp-c-brand-3: #ff1a8f;
+  --vp-c-brand-soft: rgba(228, 0, 122, 0.18);
+}
+
+/* --- Surfaces --- */
+:root {
+  --vp-c-bg: var(--armith-paper);
+  --vp-c-bg-alt: var(--armith-wash);
+  --vp-c-bg-soft: var(--armith-wash);
+  --vp-c-bg-elv: var(--armith-surface);
+}
+
+.dark {
+  --vp-c-bg: var(--armith-paper);
+  --vp-c-bg-alt: var(--armith-wash);
+  --vp-c-bg-soft: #1a1a1d;
+  --vp-c-bg-elv: var(--armith-surface);
+}
+
+:root {
+  --vp-c-border: rgba(12, 12, 12, 0.35);
+  --vp-c-divider: rgba(12, 12, 12, 0.18);
+  --vp-c-gutter: rgba(12, 12, 12, 0.22);
+
+  --vp-c-text-1: #0c0c0c;
+  --vp-c-text-2: #3d3a35;
+  --vp-c-text-3: var(--armith-muted);
+}
+
+.dark {
+  --vp-c-border: rgba(255, 255, 255, 0.2);
+  --vp-c-divider: rgba(255, 255, 255, 0.12);
+  --vp-c-gutter: #000000;
+
+  --vp-c-text-1: #f5f2eb;
+  --vp-c-text-2: #b8b3a9;
+  --vp-c-text-3: #7a766d;
+}
+
+/* Teal-ish success accents (accent-alt vibe) */
+:root {
+  --vp-c-green-1: #007a70;
+  --vp-c-green-2: #009688;
+  --vp-c-green-3: #00c9b7;
+  --vp-c-green-soft: rgba(0, 201, 183, 0.14);
+}
+
+.dark {
+  --vp-c-green-1: #5eead4;
+  --vp-c-green-2: #2dd4bf;
+  --vp-c-green-3: #14b8a6;
+  --vp-c-green-soft: rgba(0, 201, 183, 0.14);
+}
+
+/* Typography */
+:root {
+  --vp-font-family-base:
+    'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --armith-font-display: 'Syne', system-ui, sans-serif;
+}
+
+html {
+  font-optical-sizing: auto;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3,
+.vp-doc .main h1,
+.vp-doc .main h2,
+.vp-doc .main h3 {
+  font-family: var(--armith-font-display);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+/* Card-style offset shadows where VitePress uses elevation tokens */
+:root {
+  --vp-shadow-1: 3px 3px 0 0 rgba(12, 12, 12, 0.12);
+  --vp-shadow-2: 4px 4px 0 0 rgba(12, 12, 12, 0.16);
+  --vp-shadow-3: var(--armith-brutal-shadow);
+  --vp-shadow-4: 6px 6px 0 0 rgba(12, 12, 12, 0.14);
+  --vp-shadow-5: var(--armith-brutal-shadow);
+}
+
+.dark {
+  --vp-shadow-1: 3px 3px 0 0 rgba(0, 0, 0, 0.4);
+  --vp-shadow-2: 4px 4px 0 0 rgba(0, 0, 0, 0.45);
+  --vp-shadow-3: var(--armith-brutal-shadow);
+  --vp-shadow-4: 6px 6px 0 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Nav */
+.VPNav {
+  border-bottom: 2px solid var(--armith-ink) !important;
+}
+
+.dark .VPNav {
+  border-bottom-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* Sidebar */
+.VPSidebar {
+  background-color: var(--vp-c-bg-alt) !important;
+}
+
+@media (min-width: 960px) {
+  .VPSidebar {
+    border-right: 2px solid var(--armith-ink) !important;
+  }
+
+  .dark .VPSidebar {
+    border-right-color: rgba(255, 255, 255, 0.15) !important;
+  }
+}
+
+.VPSidebarItem.is-active > .item .link {
+  border-left: 4px solid var(--armith-accent);
+  padding-left: calc(12px - 4px);
+  font-weight: 700;
+}
+
+/* Doc content: links */
+.vp-doc a {
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+/* Code blocks */
+.vp-doc div[class*='language-'] {
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius) !important;
+  box-shadow: var(--armith-brutal-shadow);
+  overflow: hidden;
+}
+
+.dark .vp-doc div[class*='language-'] {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Inline code */
+.vp-doc :not(pre) > code {
+  border: 1px solid var(--vp-c-border);
+  font-weight: 600;
+}
+
+/* Custom blocks — visible borders vs default “flat” look */
+.vp-doc .custom-block {
+  border: 2px solid var(--armith-ink) !important;
+  border-radius: var(--armith-brutal-radius) !important;
+  box-shadow: var(--armith-brutal-shadow);
+}
+
+.dark .vp-doc .custom-block {
+  border-color: rgba(255, 255, 255, 0.22) !important;
+}
+
+.vp-doc .custom-block.tip {
+  border-color: var(--armith-accent) !important;
+}
+
+.vp-doc .custom-block.warning {
+  border-color: #946300 !important;
+}
+
+.vp-doc .custom-block.danger,
+.vp-doc .custom-block.caution {
+  border-color: #b8272c !important;
+}
+
+/* Primary CTA button (homepage / markdown) */
+.armith-btn-primary {
+  display: inline-block;
+  margin: 12px 0;
+  padding: 12px 18px;
+  font-family: var(--vp-font-family-base);
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  color: #fff !important;
+  background: var(--armith-accent);
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  box-shadow: var(--armith-brutal-shadow);
+  transition:
+    transform 0.08s ease,
+    box-shadow 0.08s ease;
+}
+
+.dark .armith-btn-primary {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.armith-btn-primary:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 3px 3px 0 0 var(--armith-ink);
+}
+
+.dark .armith-btn-primary:hover {
+  box-shadow: 3px 3px 0 0 rgba(255, 255, 255, 0.22);
+}
+
+/* Optional kicker badge in markdown HTML */
+.armith-kicker {
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--armith-muted);
+  background: rgba(12, 12, 12, 0.06);
+  border: 1px solid rgba(12, 12, 12, 0.15);
+  border-radius: var(--armith-brutal-radius);
+}
+
+.dark .armith-kicker {
+  color: var(--vp-c-text-2);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Tables */
+.vp-doc table {
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  box-shadow: var(--armith-brutal-shadow);
+  overflow: hidden;
+}
+
+.dark .vp-doc table {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.vp-doc th,
+.vp-doc td {
+  border-color: rgba(12, 12, 12, 0.12);
+}
+
+.dark .vp-doc th,
+.dark .vp-doc td {
+  border-color: rgba(255, 255, 255, 0.1);
+}

@@ -6,7 +6,7 @@ Armith is an **API-only** KYC platform.
 const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
 </script>
 
-<a :href="appUrl" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:12px 0;padding:10px 14px;border:1px solid #888;border-radius:6px;text-decoration:none;">
+<a :href="appUrl" target="_blank" rel="noopener noreferrer" class="armith-btn-primary">
   Uygulamaya Git
 </a>
 
