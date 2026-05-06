@@ -3,7 +3,23 @@
 Armith is an **API-only** KYC platform.
 
 <script setup>
-const appUrl = import.meta.env.VITE_APP_URL || 'http://localhost:3000';
+import { ref, onMounted } from 'vue';
+
+const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001';
+const appUrl = ref('http://localhost:3000');
+
+onMounted(async () => {
+  try {
+    const response = await fetch(`${backendUrl}/health`);
+    if (!response.ok) return;
+    const data = await response.json();
+    if (data?.appUrl) {
+      appUrl.value = data.appUrl;
+    }
+  } catch (error) {
+    console.warn('Failed to load app URL from backend config:', error);
+  }
+});
 </script>
 
 <a :href="appUrl" target="_blank" rel="noopener noreferrer" style="display:inline-block;margin:12px 0;padding:10px 14px;border:1px solid #888;border-radius:6px;text-decoration:none;">
