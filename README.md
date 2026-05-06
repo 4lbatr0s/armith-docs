@@ -1,3 +1,3 @@
 # Armith Docs
 
-Standalone documentation site for Armith, deployed on Render.
+Product documentation for Armith API-only KYC platform.

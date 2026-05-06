@@ -1,28 +1,29 @@
 # Getting Started
 
-This page helps you go from zero to your first successful KYC verification request.
+This guide helps you move from account activation to your first successful verification in production-style conditions.
 
 ## 1) Prerequisites
 
 Before calling Armith APIs, make sure you have:
 
-- A valid Armith backend base URL
-- A dashboard user account (for admin panel access)
-- An API key generated from dashboard settings (for direct API access)
-- Ability to send `x-api-key: <api_key>` headers
+- An active Armith account
+- Dashboard access for your team member
+- An API key created in `Profile -> Security`
+- Your assigned API base URL
+- Ability to send `x-api-key: <api_key>` headers from your backend
 - Ability to upload binary files to pre-signed URLs
 
 ## 2) Choose Environment
 
 Use one base URL per environment.
 
-### Local
+### Sandbox
 
-`http://localhost:3001`
+`https://sandbox-api.armith.com`
 
-### Development
+### Production
 
-`https://armith-backend-live.onrender.com`
+`https://api.armith.com`
 
 ## 3) Authentication Model
 
@@ -46,7 +47,8 @@ Protected examples:
 
 ## 4) Minimal Integration Checklist
 
-1. Sign in to dashboard and create an API key from settings
+1. Sign in to dashboard and open `Profile -> Security`
+2. Create API key and store it in your secret manager
 2. Call `POST /kyc/upload-url` for each required file
 3. Upload files directly to storage using returned pre-signed URL(s)
 4. Call `POST /kyc/id-check`
@@ -58,11 +60,11 @@ Protected examples:
 You can verify service availability with:
 
 ```bash
-curl -X GET "https://armith-backend-live.onrender.com/health"
+curl -X GET "https://api.armith.com/health"
 ```
 
 ```bash
-curl -X GET "https://armith-backend-live.onrender.com/kyc/countries"
+curl -X GET "https://api.armith.com/kyc/countries"
 ```
 
 ## 6) Important Constraints

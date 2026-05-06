@@ -60,8 +60,8 @@ Many endpoints return structured errors as:
 
 ### On `401/403`
 
-- Refresh/re-acquire auth token
-- Ask user to sign in again if needed
+- Verify that your API key is present and not revoked
+- Rotate key in `Profile -> Security` if needed
 
 ### On `5xx` or `failed`
 

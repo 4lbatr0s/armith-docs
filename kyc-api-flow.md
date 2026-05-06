@@ -5,8 +5,8 @@ This is the practical integration walkthrough for API-only KYC.
 ## Step 0 - Set your base URL
 
 ```bash
-export BASE_URL="https://armith-backend-live.onrender.com"
-export TOKEN="<CLERK_BEARER_TOKEN>"
+export BASE_URL="https://api.armith.com"
+export API_KEY="<ARMITH_API_KEY>"
 ```
 
 ## Step 1 - Generate upload URLs
@@ -15,7 +15,7 @@ Request upload URL for ID front image:
 
 ```bash
 curl -X POST "$BASE_URL/kyc/upload-url" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "fileType": "image/jpeg",
@@ -50,7 +50,7 @@ Do this for all required images.
 
 ```bash
 curl -X POST "$BASE_URL/kyc/id-check" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "countryCode": "TR",
@@ -74,7 +74,7 @@ Save `profileId`; you need it for status polling and typical selfie step.
 
 ```bash
 curl -X POST "$BASE_URL/kyc/selfie-check" \
-  -H "Authorization: Bearer $TOKEN" \
+  -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "idPhotoUrl": "<ID_FRONT_DOWNLOAD_URL>",
@@ -94,7 +94,7 @@ Key response fields:
 
 ```bash
 curl -X GET "$BASE_URL/kyc/status/<PROFILE_ID_FROM_ID_CHECK>" \
-  -H "Authorization: Bearer $TOKEN"
+  -H "x-api-key: $API_KEY"
 ```
 
 This endpoint returns:

@@ -18,10 +18,12 @@ Armith is an **API-only** KYC platform.
 
 ## Base URL
 
-Use your environment-specific backend URL:
+Use your assigned API base URL:
 
-- Local: `http://localhost:3001`
-- Development (Render): `https://armith-backend-live.onrender.com`
+- Production: `https://api.armith.com`
+- Sandbox: `https://sandbox-api.armith.com`
+
+Ask Armith support for your tenant base URL if your account uses a dedicated domain.
 
 ## Supported KYC Pattern (Current)
 

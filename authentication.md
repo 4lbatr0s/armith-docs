@@ -38,10 +38,11 @@ Content-Type: application/json
 
 ## Typical API Key Flow
 
-1. A dashboard user signs in and creates an API key
-2. Customer backend stores the API key in a secure secret manager
-3. Customer backend sends `x-api-key` with KYC requests
-4. Backend validates key and resolves tenant/user context
+1. A dashboard user signs in and opens `Profile -> Security`
+2. A key is created for each workload/environment (for example `prod-backend`)
+3. The raw key is stored in your secret manager
+4. Your backend sends `x-api-key` with Armith requests
+5. Armith validates key ownership and request scope
 
 ## Common Authentication Mistakes
 
@@ -53,7 +54,7 @@ Content-Type: application/json
 ## Example Request With API Key
 
 ```bash
-curl -X POST "https://armith-backend-live.onrender.com/kyc/upload-url" \
+curl -X POST "https://api.armith.com/kyc/upload-url" \
   -H "x-api-key: <ARMITH_API_KEY>" \
   -H "Content-Type: application/json" \
   -d '{

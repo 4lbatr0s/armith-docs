@@ -58,6 +58,7 @@ Purpose:
 
 - Create a new API key.
 - Returns the raw key value once at creation time.
+- In dashboard, this maps to `Profile -> Security`.
 
 `DELETE /admin/api-keys/:id`
 
