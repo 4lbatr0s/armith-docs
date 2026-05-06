@@ -107,6 +107,11 @@ This endpoint returns:
 
 ## Step 6 - Handle outcomes in your app
 
+### Plan limit reached
+
+- If response includes `PLAN_LIMIT_REACHED`, stop further attempts
+- Route user to pricing or plan management flow
+
 ### Approved
 
 - Mark user as verified

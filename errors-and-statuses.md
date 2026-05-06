@@ -53,6 +53,11 @@ Many endpoints return structured errors as:
 
 ## Typical Integration Behavior
 
+### On `PLAN_LIMIT_REACHED`
+
+- Return user to plan/upgrade step in your product
+- Do not retry verification request until quota resets or plan changes
+
 ### On `4xx` with validation errors
 
 - Show clear user guidance

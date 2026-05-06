@@ -13,6 +13,8 @@ Before calling Armith APIs, make sure you have:
 - Ability to send `x-api-key: <api_key>` headers from your backend
 - Ability to upload binary files to pre-signed URLs
 
+If you use the dashboard Live Demo flow, user authentication is required before verification starts.
+
 ## 2) Choose Environment
 
 Use one base URL per environment.
@@ -74,3 +76,5 @@ curl -X GET "https://api.armith.com/kyc/countries"
 - Image URLs must be valid and accessible by backend verification logic
 - If your active rules require both ID + selfie, `profileId` is mandatory for selfie step
 - CORS and auth must be configured correctly per environment
+- Verification usage is enforced by monthly plan limits (free and paid tiers)
+- If limit is reached, API returns `PLAN_LIMIT_REACHED`
