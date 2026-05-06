@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: Armith KYC API
+  version: 1.0.0
+  description: |
+    Armith API-only KYC service.
+    This specification documents the currently available REST endpoints.
+servers:
+  - url: http://localhost:3001
+    description: Local
+  - url: https://armith-backend-live.onrender.com
+    description: Development (Render)
+tags:
+  - name: Health
+  - name: Auth
+  - name: KYC
+  - name: Admin
+  - name: Config
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    ErrorItem:
+      type: object
+      properties:
+        code:
+          type: string
+        numericCode:
+          type: integer
+        message:
+          type: string
+        field:
+          type: string
+    UploadUrlRequest:
+      type: object
+      properties:
+        fileType:
+          type: string
+          example: image/jpeg
+        userId:
+          type: string
+          nullable: true
+        documentType:
+          type: string
+          enum: [id-front, id-back, selfie]
+      required: [fileType]
+    UploadUrlResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        uploadUrl:
+          type: string
+        downloadUrl:
+          type: string
+    IdCheckRequest:
+      type: object
+      properties:
+        countryCode:
+          type: string
+          example: TR
+        frontImageUrl:
+          type: string
+        backImageUrl:
+          type: string
+      required: [countryCode, frontImageUrl]
+    SelfieCheckRequest:
+      type: object
+      properties:
+        idPhotoUrl:
+          type: string
+        selfieUrls:
+          type: array
+          items:
+            type: string
+        profileId:
+          type: string
+      required: [idPhotoUrl, selfieUrls]
+    GenericErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorItem'
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Service healthy
+  /auth/status:
+    get:
+      tags: [Auth]
+      summary: Authentication status
+      responses:
+        '200':
+          description: Auth status payload
+  /auth/profile:
+    get:
+      tags: [Auth]
+      summary: Get current user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile returned
+        '401':
+          description: Unauthorized
+  /kyc/countries:
+    get:
+      tags: [KYC]
+      summary: List supported countries
+      responses:
+        '200':
+          description: Supported country list
+  /kyc/llm-status:
+    get:
+      tags: [KYC]
+      summary: LLM service status
+      responses:
+        '200':
+          description: LLM status returned
+  /kyc/upload-url:
+    post:
+      tags: [KYC]
+      summary: Generate pre-signed upload URL
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadUrlRequest'
+      responses:
+        '200':
+          description: Upload and download URLs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+  /kyc/secure-download-url:
+    post:
+      tags: [KYC]
+      summary: Generate secure download URL for existing file
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fileName:
+                  type: string
+              required: [fileName]
+      responses:
+        '200':
+          description: Download URL created
+        '400':
+          description: Invalid request
+  /kyc/id-check:
+    post:
+      tags: [KYC]
+      summary: Run ID verification
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdCheckRequest'
+      responses:
+        '200':
+          description: ID verification result
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '500':
+          description: Internal error
+  /kyc/selfie-check:
+    post:
+      tags: [KYC]
+      summary: Run selfie verification
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SelfieCheckRequest'
+      responses:
+        '200':
+          description: Selfie verification result
+        '400':
+          description: Validation failure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+  /kyc/status/{profileId}:
+    get:
+      tags: [KYC]
+      summary: Get consolidated profile verification status
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Profile status payload
+        '404':
+          description: Profile not found
+  /admin/verifications:
+    get:
+      tags: [Admin]
+      summary: List verifications (paginated)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated verification list
+  /admin/stats:
+    get:
+      tags: [Admin]
+      summary: Get verification statistics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Stats payload
+  /admin/settings:
+    get:
+      tags: [Admin]
+      summary: Get KYC settings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settings payload
+    put:
+      tags: [Admin]
+      summary: Update KYC settings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Settings updated
+  /admin/settings/reset:
+    post:
+      tags: [Admin]
+      summary: Reset KYC settings to defaults
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Settings reset
+  /config:
+    get:
+      tags: [Config]
+      summary: Get current user configuration
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Configuration payload
+    patch:
+      tags: [Config]
+      summary: Partially update user configuration
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Configuration updated
+  /config/presets:
+    get:
+      tags: [Config]
+      summary: List available presets
+      responses:
+        '200':
+          description: Preset list
+  /config/preset:
+    post:
+      tags: [Config]
+      summary: Apply a preset
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                preset:
+                  type: string
+              required: [preset]
+      responses:
+        '200':
+          description: Preset applied
