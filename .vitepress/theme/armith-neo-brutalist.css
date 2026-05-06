@@ -280,3 +280,222 @@ html {
 .dark .vp-doc td {
   border-color: rgba(255, 255, 255, 0.1);
 }
+
+/* --- REST API playground (api-reference.md) --- */
+.api-playground-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 1rem;
+  font-family: var(--vp-font-family-base);
+}
+
+.api-playground-panel {
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  box-shadow: var(--armith-brutal-shadow);
+  padding: 1.25rem 1.25rem 1.5rem;
+  background: var(--vp-c-bg-elv);
+}
+
+.dark .api-playground-panel {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.api-playground-panel-dark {
+  background: var(--vp-c-bg-alt);
+}
+
+.api-playground-heading {
+  font-family: var(--armith-font-display);
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--armith-accent);
+  display: inline-block;
+  width: 100%;
+}
+
+.api-playground-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+@media (min-width: 720px) {
+  .api-playground-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.api-playground-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.api-playground-field > span,
+.api-playground-field > label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vp-c-text-2);
+}
+
+.api-playground-field input,
+.api-playground-select {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+}
+
+.dark .api-playground-field input,
+.dark .api-playground-select {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.api-playground-select {
+  cursor: pointer;
+}
+
+.api-playground-code,
+.api-playground-pre {
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  background: var(--vp-c-bg-alt);
+  color: var(--vp-c-text-1);
+  padding: 0.75rem;
+  margin: 0;
+  overflow: auto;
+  max-height: 28rem;
+}
+
+.dark .api-playground-code,
+.dark .api-playground-pre {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.api-playground-pre.api-playground-live {
+  min-height: 8rem;
+  max-height: 36rem;
+}
+
+.api-playground-desc {
+  font-size: 0.9rem;
+  color: var(--vp-c-text-2);
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+}
+
+.api-playground-auth-hint {
+  font-size: 0.8rem;
+  color: var(--armith-accent);
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.api-playground-path-params {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: 2px dashed rgba(12, 12, 12, 0.2);
+  border-radius: var(--armith-brutal-radius);
+}
+
+.dark .api-playground-path-params {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.api-playground-method-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.api-playground-method-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.5rem;
+  padding: 0.45rem 0.6rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--armith-accent);
+  color: #fff;
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  box-shadow: 3px 3px 0 0 var(--armith-ink);
+}
+
+.dark .api-playground-method-badge {
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow: 3px 3px 0 0 rgba(255, 255, 255, 0.15);
+}
+
+.api-playground-path-grow {
+  flex: 1;
+  min-width: 200px;
+  margin-bottom: 0 !important;
+}
+
+.api-playground-send {
+  margin-top: 0.5rem;
+  cursor: pointer;
+  border: none;
+}
+
+.api-playground-send:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.api-playground-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.api-playground-tab {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.65rem;
+  border: 2px solid var(--armith-ink);
+  border-radius: var(--armith-brutal-radius);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-1);
+}
+
+.dark .api-playground-tab {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.api-playground-tab.is-active {
+  background: var(--armith-accent-alt);
+  color: var(--armith-ink);
+  border-color: var(--armith-ink);
+}
+
+.dark .api-playground-tab.is-active {
+  color: var(--armith-paper);
+  border-color: rgba(255, 255, 255, 0.35);
+}
