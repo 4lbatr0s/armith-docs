@@ -12,7 +12,8 @@ const body = ref('');
 const pathParamValues = ref({});
 const loading = ref(false);
 const liveResponse = ref('');
-const selectedExampleIx = ref(0);
+const selectedSuccessIx = ref(0);
+const selectedErrorIx = ref(0);
 
 const byTag = computed(() => {
   const map = Object.fromEntries(PLAYGROUND_TAG_ORDER.map((t) => [t, []]));
@@ -60,7 +61,8 @@ function syncFromEndpoint() {
   pathParamValues.value = pv;
   pathField.value = resolvePathFromParams(ep, pv);
   body.value = ep.body ?? '';
-  selectedExampleIx.value = 0;
+  selectedSuccessIx.value = 0;
+  selectedErrorIx.value = 0;
 }
 
 watch(selectedId, syncFromEndpoint, { immediate: true });
@@ -76,10 +78,17 @@ watch(
 );
 
 const activeExamples = computed(() => selectedEndpoint.value?.responseExamples ?? []);
+const successExamples = computed(() => activeExamples.value.filter((ex) => Number(ex.status) < 400));
+const errorExamples = computed(() => activeExamples.value.filter((ex) => Number(ex.status) >= 400));
 
-const examplePreview = computed(() => {
-  const list = activeExamples.value;
-  const ex = list[selectedExampleIx.value];
+const successPreview = computed(() => {
+  const ex = successExamples.value[selectedSuccessIx.value];
+  if (!ex || ex.body === undefined) return '—';
+  return JSON.stringify(ex.body, null, 2);
+});
+
+const errorPreview = computed(() => {
+  const ex = errorExamples.value[selectedErrorIx.value];
   if (!ex || ex.body === undefined) return '—';
   return JSON.stringify(ex.body, null, 2);
 });
@@ -94,6 +103,11 @@ function authNote(ep) {
 
 function pickEndpoint(ep) {
   selectedId.value = ep.id;
+}
+
+function methodClass(methodName) {
+  const key = String(methodName || 'get').toLowerCase();
+  return `api-playground-method-badge api-playground-method-${key}`;
 }
 
 function pathParamValue(name) {
@@ -218,7 +232,7 @@ async function sendRequest() {
           </div>
 
           <div class="api-playground-method-row">
-            <span class="api-playground-method-badge">{{ method }}</span>
+            <span :class="methodClass(method)">{{ method }}</span>
             <label class="api-playground-field api-playground-path-grow">
               <span>Request URL — path plus optional query string</span>
               <input v-model="pathField" type="text" spellcheck="false" />
@@ -248,21 +262,44 @@ async function sendRequest() {
         <section class="api-playground-panel api-playground-panel-dark">
           <h3 class="api-playground-heading">Reference responses</h3>
           <p class="api-playground-desc">
-            Illustrative payloads — actual messages and fields may vary slightly by version.
+            Endpointe tiklayinca requeste karsilik olasi basarili ve hatali cevaplar ayrik bloklarda gorunur.
           </p>
-          <div v-if="activeExamples.length" class="api-playground-tabs">
-            <button
-              v-for="(ex, i) in activeExamples"
-              :key="i"
-              type="button"
-              class="api-playground-tab"
-              :class="{ 'is-active': selectedExampleIx === i }"
-              @click="selectedExampleIx = i"
-            >
-              {{ ex.status }} — {{ ex.label }}
-            </button>
+
+          <div class="api-playground-response-grid">
+            <section class="api-playground-response-card is-success">
+              <h4 class="api-playground-response-title">Success response</h4>
+              <div v-if="successExamples.length" class="api-playground-tabs">
+                <button
+                  v-for="(ex, i) in successExamples"
+                  :key="`s-${i}`"
+                  type="button"
+                  class="api-playground-tab is-success"
+                  :class="{ 'is-active': selectedSuccessIx === i }"
+                  @click="selectedSuccessIx = i"
+                >
+                  {{ ex.status }} — {{ ex.label }}
+                </button>
+              </div>
+              <pre class="api-playground-pre">{{ successPreview }}</pre>
+            </section>
+
+            <section class="api-playground-response-card is-error">
+              <h4 class="api-playground-response-title">Error response</h4>
+              <div v-if="errorExamples.length" class="api-playground-tabs">
+                <button
+                  v-for="(ex, i) in errorExamples"
+                  :key="`e-${i}`"
+                  type="button"
+                  class="api-playground-tab is-error"
+                  :class="{ 'is-active': selectedErrorIx === i }"
+                  @click="selectedErrorIx = i"
+                >
+                  {{ ex.status }} — {{ ex.label }}
+                </button>
+              </div>
+              <pre class="api-playground-pre">{{ errorPreview }}</pre>
+            </section>
           </div>
-          <pre class="api-playground-pre">{{ examplePreview }}</pre>
         </section>
 
         <section class="api-playground-panel">

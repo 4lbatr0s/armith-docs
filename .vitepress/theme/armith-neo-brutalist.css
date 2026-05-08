@@ -287,23 +287,24 @@ html {
 }
 
 .api-playground-layout {
-  display: grid;
-  grid-template-columns: minmax(260px, 300px) 1fr;
+  display: flex;
   gap: 1.25rem;
-  align-items: start;
+  align-items: flex-start;
 }
 
 @media (max-width: 959px) {
   .api-playground-layout {
-    grid-template-columns: 1fr;
+    flex-direction: column;
   }
 }
 
 .api-playground-catalog {
-  position: sticky;
-  top: calc(var(--vp-nav-height, 64px) + 12px);
-  max-height: min(72vh, 680px);
-  overflow-y: auto;
+  flex: 0 0 min(36%, 420px);
+  width: 100%;
+  position: static;
+  top: auto;
+  max-height: none;
+  overflow: visible;
   padding: 1rem;
   border: 1px solid var(--armith-border-strong);
   border-radius: var(--armith-radius);
@@ -353,7 +354,7 @@ html {
   cursor: pointer;
   text-align: left;
   font: inherit;
-  padding: 0.55rem 0.65rem;
+  padding: 0.7rem 0.75rem;
   border: 1px solid var(--armith-border);
   border-radius: var(--armith-radius-sm);
   background: var(--vp-c-bg);
@@ -413,12 +414,13 @@ html {
 
 .api-playground-endpoint-title {
   display: block;
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--vp-c-text-1);
 }
 
 .api-playground-main {
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -580,6 +582,52 @@ html {
   box-shadow: none;
 }
 
+.api-playground-method-get {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
+  border-color: rgba(15, 118, 110, 0.28);
+}
+
+.api-playground-method-post {
+  color: #1d4ed8;
+  background: rgba(37, 99, 235, 0.1);
+  border-color: rgba(37, 99, 235, 0.28);
+}
+
+.api-playground-method-put,
+.api-playground-method-patch {
+  color: #7c3aed;
+  background: rgba(124, 58, 237, 0.1);
+  border-color: rgba(124, 58, 237, 0.28);
+}
+
+.api-playground-method-delete {
+  color: #b91c1c;
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.28);
+}
+
+.dark .api-playground-method-get {
+  color: #5eead4;
+  background: rgba(20, 184, 166, 0.18);
+}
+
+.dark .api-playground-method-post {
+  color: #93c5fd;
+  background: rgba(37, 99, 235, 0.22);
+}
+
+.dark .api-playground-method-put,
+.dark .api-playground-method-patch {
+  color: #d8b4fe;
+  background: rgba(147, 51, 234, 0.24);
+}
+
+.dark .api-playground-method-delete {
+  color: #fca5a5;
+  background: rgba(220, 38, 38, 0.22);
+}
+
 .api-playground-path-grow {
   flex: 1;
   min-width: 200px;
@@ -632,4 +680,189 @@ html {
 
 .dark .api-playground-tab.is-active {
   color: var(--armith-accent);
+}
+
+.api-playground-response-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.9rem;
+}
+
+@media (min-width: 960px) {
+  .api-playground-response-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.api-playground-response-card {
+  border: 1px solid var(--armith-border-strong);
+  border-radius: var(--armith-radius);
+  padding: 0.75rem;
+  background: var(--vp-c-bg-elv);
+}
+
+.api-playground-response-card.is-success {
+  border-color: rgba(5, 150, 105, 0.35);
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.api-playground-response-card.is-error {
+  border-color: rgba(220, 38, 38, 0.35);
+  background: rgba(220, 38, 38, 0.06);
+}
+
+.dark .api-playground-response-card.is-success {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.dark .api-playground-response-card.is-error {
+  background: rgba(220, 38, 38, 0.14);
+}
+
+.api-playground-response-title {
+  margin: 0 0 0.5rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.api-playground-tab.is-success.is-active {
+  color: #047857;
+  border-color: #059669;
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.api-playground-tab.is-error.is-active {
+  color: #b91c1c;
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.14);
+}
+
+.dark .api-playground-tab.is-success.is-active {
+  color: #6ee7b7;
+  border-color: #34d399;
+}
+
+.dark .api-playground-tab.is-error.is-active {
+  color: #fca5a5;
+  border-color: #f87171;
+}
+
+/* --- API reference page (Notion-like scanability) --- */
+.armith-api-hero {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.5rem 0 1.2rem;
+}
+
+@media (max-width: 720px) {
+  .armith-api-hero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.armith-api-hero > div {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid var(--armith-border-strong);
+  border-radius: var(--armith-radius);
+  background: var(--vp-c-bg-elv);
+  box-shadow: var(--armith-shadow);
+}
+
+.armith-api-hero-title {
+  margin: 0 0 0.45rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 700;
+  color: var(--vp-c-text-2);
+}
+
+.armith-api-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0.65rem 0 1.25rem;
+}
+
+@media (max-width: 960px) {
+  .armith-api-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.armith-api-card {
+  display: block;
+  border: 1px solid var(--armith-border-strong);
+  border-radius: var(--armith-radius);
+  padding: 0.85rem 0.9rem;
+  background: var(--vp-c-bg-elv);
+  box-shadow: var(--armith-shadow);
+  text-decoration: none !important;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+
+.armith-api-card:hover {
+  border-color: var(--armith-accent);
+  transform: translateY(-1px);
+}
+
+.armith-api-card-title {
+  display: block;
+  font-weight: 700;
+  color: var(--vp-c-text-1);
+  margin-bottom: 0.25rem;
+}
+
+.armith-api-card-desc {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--vp-c-text-2);
+}
+
+.armith-method {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  margin-right: 0.4rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid var(--armith-border-strong);
+}
+
+.armith-method-get {
+  color: #0f766e;
+  background: rgba(15, 118, 110, 0.1);
+}
+
+.armith-method-post {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.armith-method-patch {
+  color: #9333ea;
+  background: rgba(147, 51, 234, 0.1);
+}
+
+.dark .armith-method-get {
+  color: #5eead4;
+  background: rgba(45, 212, 191, 0.16);
+}
+
+.dark .armith-method-post {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.dark .armith-method-patch {
+  color: #d8b4fe;
+  background: rgba(168, 85, 247, 0.2);
 }
