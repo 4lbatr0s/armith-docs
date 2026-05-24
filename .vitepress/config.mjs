@@ -19,6 +19,7 @@ export default defineConfig({
     nav: [
       { text: 'Overview', link: '/' },
       { text: 'Quickstart', link: '/getting-started' },
+      { text: 'Webhooks', link: '/webhooks' },
       { text: 'REST API Playground', link: '/api-reference' }
     ],
     sidebar: [
@@ -27,7 +28,8 @@ export default defineConfig({
         items: [
           { text: 'Overview', link: '/' },
           { text: 'Getting Started', link: '/getting-started' },
-          { text: 'Authentication', link: '/authentication' }
+          { text: 'Authentication', link: '/authentication' },
+          { text: 'Integrations Dashboard', link: '/integrations-dashboard' }
         ]
       },
       {
@@ -35,13 +37,15 @@ export default defineConfig({
         items: [
           { text: 'Flow Overview', link: '/kyc-flow-overview' },
           { text: 'Step-by-Step API Flow', link: '/kyc-api-flow' },
+          { text: 'Verification & Preflight', link: '/verification-and-preflight' },
           { text: 'Statuses and Errors', link: '/errors-and-statuses' },
           { text: 'REST API Playground', link: '/api-reference' }
         ]
       },
       {
-        text: 'Dashboard APIs',
+        text: 'Events & Operations',
         items: [
+          { text: 'Outbound Webhooks', link: '/webhooks' },
           { text: 'Admin and Config APIs', link: '/admin-and-config-apis' }
         ]
       }

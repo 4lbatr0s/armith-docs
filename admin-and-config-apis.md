@@ -1,98 +1,186 @@
 # Admin and Config APIs
 
-This section describes non-core-flow endpoints used for operations and rule management.
+Dashboard and automation endpoints beyond the core KYC upload/verify flow. All `/admin/*` routes require **Clerk session** authentication (`requireAuth()`).
 
-## Admin Endpoints
+Base URL: same as KYC API (e.g. `https://armith-backend-live.onrender.com`).
 
-Base path: `/admin`
+## Admin — Verifications
 
-All admin endpoints require dashboard user authentication.
-
-## 1) List verifications
+### List verifications
 
 `GET /admin/verifications?page=1&limit=10&status=APPROVED`
 
-Purpose:
+Query:
 
-- Paginated list of verification profiles and metadata for dashboard use.
+| Param | Description |
+|-------|-------------|
+| `page` | Page number (default 1) |
+| `limit` | Page size (max 100) |
+| `status` | Filter: `APPROVED`, `REJECTED`, `PENDING`, `UNDER_REVIEW`, `FAILED` |
 
-## 2) Verification statistics
+### Delete verification
+
+`DELETE /admin/verifications/:profileId`
+
+Deletes profile and validation records. Optional R2 object purge when `ADMIN_DELETE_PURGE_OBJECTS=1`.
+
+### Capture session token
+
+`POST /admin/verifications/:profileId/capture-session`
+
+Body (optional): `{ "ttlSeconds": 900 }`
+
+Returns `{ token, expiresAtEpochSec, headerName: "X-Verification-Session" }` for embedded capture UIs.
+
+### Dashboard statistics
 
 `GET /admin/stats`
 
-Purpose:
+Returns aggregate counts: total, approved, rejected, pending, underReview, approvalRate, activeApiKeys.
 
-- Aggregate counters such as approved/rejected/pending and approval rate.
+### Error summary
 
-## 3) Read settings
+`GET /admin/errors/summary?limit=100`
+
+Top error fingerprints for ops/debugging (max limit 400).
+
+## Admin — Manual Review
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/manual-reviews?page=1&limit=10&source=auto` | Review queue |
+| `POST` | `/admin/manual-reviews/:profileId/enqueue` | Enqueue PENDING profile |
+| `POST` | `/admin/manual-reviews/:profileId/resolve` | Body: `{ "decision": "APPROVED" \| "REJECTED", "note?": "…" }` |
+
+## Admin — Settings
+
+Product-shaped tenant configuration (primary dashboard path).
+
+### Get settings
 
 `GET /admin/settings`
 
-Purpose:
+```json
+{
+  "settings": {
+    "verificationRules": {
+      "requireIdCard": true,
+      "requireSelfie": true,
+      "logicOperator": "AND",
+      "allowPartialSubmission": false
+    },
+    "thresholds": {
+      "fullNameConfidence": 0.8,
+      "identityNumberConfidence": 0.9,
+      "matchConfidence": 92,
+      "idMinCaptureSharpness": 0.38,
+      "selfieMinCaptureSharpness": 0.38,
+      "idMinImageQuality": 0.62,
+      "selfieMinImageQuality": 0.62,
+      "minDocumentVitalityConfidence": 0.55,
+      "spoofingRiskMax": 0.25
+    },
+    "integration": {
+      "webhookUrl": "",
+      "hasWebhookSecret": false,
+      "webhookEvents": ["verification.completed", "verification.failed"],
+      "webhookDataFields": [],
+      "webhookDataFieldCatalog": ["country", "externalRef", "metadata", "…"]
+    },
+    "metadata": { "lastUpdated": "2026-05-24T…" }
+  },
+  "defaults": { "thresholds": { "…": "balanced preset" } }
+}
+```
 
-- Returns active verification rules and threshold settings.
+Webhook secret is **never** returned — only `hasWebhookSecret`.
 
-## 4) Update settings
+### Update settings
 
 `PUT /admin/settings`
 
-Purpose:
+```json
+{
+  "verificationRules": { "requireSelfie": true },
+  "thresholds": {
+    "idMinCaptureSharpness": 0.42,
+    "matchConfidence": 94
+  },
+  "integration": {
+    "webhookUrl": "https://example.com/hook",
+    "webhookSecret": "legacy-plaintext-secret",
+    "webhookEvents": ["verification.completed"],
+    "webhookDataFields": ["externalRef"]
+  }
+}
+```
 
-- Update verification rule switches and threshold values.
+Legacy integration patches fan out to **all production country configs** for the tenant.
 
-## 5) Reset settings
+### Reset settings
 
 `POST /admin/settings/reset`
 
-Purpose:
+Resets TR production config to code defaults (balanced preset baseline).
 
-- Reset settings to default preset values.
+## Admin — API Keys
 
-## 6) API key lifecycle
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/admin/api-keys` | List keys (metadata only) + `features.perKeyIpAllowlist` |
+| `POST` | `/admin/api-keys` | Body: `{ "name": "prod" }` → `{ apiKey, token }` (**token once**) |
+| `DELETE` | `/admin/api-keys/:id` | Revoke |
+| `PUT` | `/admin/account-api-ip-allowlist` | Body: `{ "allowedCidrs": ["203.0.113.0/24"] }` |
+| `PATCH` | `/admin/api-keys/:id` | Per-key IP allowlist (plan-gated) |
 
-`GET /admin/api-keys`
+Dashboard UI: **Integrations → API Keys**.
 
-- List API keys (metadata only, no secret value).
+## Admin — Webhooks
 
-`POST /admin/api-keys`
+See [Outbound Webhooks](/webhooks) for full signing and payload documentation.
 
-- Create a new API key.
-- Returns the raw key value once at creation time.
-- In dashboard, this maps to `Profile -> Security`.
+| Method | Path |
+|--------|------|
+| `GET/POST` | `/admin/webhooks/signing-key/default` |
+| `GET/POST/PATCH/DELETE` | `/admin/webhooks`, `/admin/webhooks/:id` |
+| `POST` | `/admin/webhooks/:id/rotate-key` |
+| `GET` | `/admin/webhook-deliveries` |
+| `POST` | `/admin/webhooks/replay/:profileId` |
 
-`DELETE /admin/api-keys/:id`
+Dashboard UI: **Integrations → Webhooks**.
 
-- Revoke an existing API key.
-- Revoked keys cannot authenticate KYC requests.
+## Config Endpoints (`/config`)
 
----
+Document-native KYC configuration for advanced automation. **Clerk session only** — not reachable with API key alone.
 
-## Config Endpoints
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/config` | Clerk | Full `KycConfiguration`; creates default if missing |
+| `GET` | `/config/presets` | **Public** | Preset catalog (`strict`, `balanced`, `lenient`) |
+| `PATCH` | `/config` | Clerk | Partial update with **`version`** optimistic locking |
+| `POST` | `/config/preset` | Clerk | Body: `{ "preset": "balanced" }` |
 
-Base path: `/config`
+### `/config` vs `/admin/settings`
 
-These endpoints rely on authenticated user context (`req.auth.userId`) and are intended for user-scoped KYC configuration workflows.
+| Surface | Shape | Locking |
+|---------|-------|---------|
+| `/admin/settings` | Flat `thresholds`, `verificationRules`, `integration` | Bumps `version` on change; no client version required |
+| `/config` | Nested Mongo document mirror | `PATCH` requires matching `version`; returns 409 on conflict |
 
-## 1) Get config
+**Recommendation:** Use one writer path per app. Dashboard → `/admin/settings`. Automation with nested fields → `/config`.
 
-`GET /config`
+`PATCH /config` **rejects** deprecated top-level `integrationWebhook*` fields — use `/admin/webhooks` instead.
 
-Returns user config; creates default if none exists.
+## Auth Endpoints
 
-## 2) Get presets
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| `GET` | `/auth/profile` | Clerk | User record, plan, usage |
+| `GET` | `/auth/status` | Optional | `{ authenticated, userId }` |
+| `POST` | `/auth/webhook` | Svix (Clerk) | Inbound user lifecycle sync |
 
-`GET /config/presets`
+## Inbound Test Webhook (Debug)
 
-Returns available preset definitions.
+`POST /webhooks/test` — enabled when `WEBHOOK_TEST_ENABLED=1`. Logs payload; optional HMAC check with `WEBHOOK_TEST_SIGNING_SECRET` (plaintext secret style).
 
-## 3) Update config (partial)
-
-`PATCH /config`
-
-Applies partial updates to nested config fields.
-
-## 4) Apply preset
-
-`POST /config/preset`
-
-Sets active config based on chosen preset key.
+Not for production integrations.

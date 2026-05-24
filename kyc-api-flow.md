@@ -1,17 +1,19 @@
 # Step-by-Step API Flow
 
-This is the practical integration walkthrough for API-only KYC.
+Practical walkthrough for API-only KYC integration.
 
-## Step 0 - Set your base URL
+## Step 0 — Environment variables
 
 ```bash
 export BASE_URL="https://armith-backend-live.onrender.com"
-export API_KEY="<ARMITH_API_KEY>"
+export API_KEY="ak_live_<YOUR_KEY>"
 ```
 
-## Step 1 - Generate upload URLs
+Create the API key under **Integrations → API Keys** in the dashboard.
 
-Request upload URL for ID front image:
+## Step 1 — Generate upload URLs
+
+ID front:
 
 ```bash
 curl -X POST "$BASE_URL/kyc/upload-url" \
@@ -23,20 +25,17 @@ curl -X POST "$BASE_URL/kyc/upload-url" \
   }'
 ```
 
-Response contains fields such as:
+Repeat for `id-back` (if required) and `selfie`.
 
-- `uploadUrl`
-- `downloadUrl`
-- optional file metadata
+Response fields:
 
-Repeat for:
+- `uploadUrl` — presigned PUT target
+- `downloadUrl` — pass to verification endpoints
+- `expiresIn` — typically 300 seconds
 
-- `id-back` (if needed)
-- `selfie`
+Storage keys are scoped to `users/{tenantMongoId}/…`.
 
-## Step 2 - Upload file bytes to `uploadUrl`
-
-Use `PUT` directly to the returned URL:
+## Step 2 — Upload file bytes
 
 ```bash
 curl -X PUT "<UPLOAD_URL_FROM_STEP_1>" \
@@ -44,38 +43,45 @@ curl -X PUT "<UPLOAD_URL_FROM_STEP_1>" \
   --data-binary "@./id-front.jpg"
 ```
 
-Do this for all required images.
+Upload all required images before calling verification.
 
-## Step 3 - Run ID verification
+## Step 3 — Run ID verification
 
 ```bash
 curl -X POST "$BASE_URL/kyc/id-check" \
   -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: id-check-$(uuidgen)" \
   -d '{
     "countryCode": "TR",
     "frontImageUrl": "<ID_FRONT_DOWNLOAD_URL>",
-    "backImageUrl": "<ID_BACK_DOWNLOAD_URL>"
+    "backImageUrl": "<ID_BACK_DOWNLOAD_URL>",
+    "integrationExternalRef": "order-12345",
+    "integrationMetadata": {
+      "channel": "mobile-app"
+    }
   }'
 ```
 
 Key response fields:
 
-- `status`
-- `idStatus`
-- `profileId`
-- `data` (extracted ID fields)
-- `confidenceScores`
-- `rejectionReasons`
+- `status` — overall profile status after this step (`approved`, `pending`, `rejected`, `failed`)
+- `idStatus` — ID checkpoint result
+- `profileId` — **required for selfie and status polling**
+- `data` — extracted ID fields
+- `confidenceScores`, `rejectionReasons`, `errors`
 
-Save `profileId`; you need it for status polling and typical selfie step.
+Save `profileId`.
 
-## Step 4 - Run selfie verification
+## Step 4 — Run selfie verification
+
+Required when tenant rules require both ID and selfie:
 
 ```bash
 curl -X POST "$BASE_URL/kyc/selfie-check" \
   -H "x-api-key: $API_KEY" \
   -H "Content-Type: application/json" \
+  -H "Idempotency-Key: selfie-check-<profileId>" \
   -d '{
     "idPhotoUrl": "<ID_FRONT_DOWNLOAD_URL>",
     "selfieUrls": ["<SELFIE_DOWNLOAD_URL>"],
@@ -85,48 +91,75 @@ curl -X POST "$BASE_URL/kyc/selfie-check" \
 
 Key response fields:
 
-- `status`
-- `selfieStatus`
-- `confidenceScores`
+- `status`, `selfieStatus`
+- `confidenceScores` (includes `matchConfidence` 0–100)
 - `rejectionReasons`
 
-## Step 5 - Get final profile status
+## Step 5 — Get profile status
 
 ```bash
-curl -X GET "$BASE_URL/kyc/status/<PROFILE_ID_FROM_ID_CHECK>" \
+curl -X GET "$BASE_URL/kyc/status/<PROFILE_ID>" \
   -H "x-api-key: $API_KEY"
 ```
 
-This endpoint returns:
+Alias: `GET /kyc/sessions/<PROFILE_ID>` (same handler).
 
-- consolidated profile status
-- progress object
-- ID verification details
-- selfie verification details
-- thresholds and verification rules used
+Returns:
 
-## Step 6 - Handle outcomes in your app
+- Uppercase `status` (`PENDING`, `APPROVED`, …)
+- `progress` — which steps completed
+- `idVerification`, `selfieVerification` detail objects
+- `thresholds` — flat threshold snapshot used for evaluation
+- `session.lifecycle` — high-level state (`awaiting_selfie`, `approved`, …)
 
-### Plan limit reached
+## Step 6 — Secure download (optional)
 
-- If response includes `PLAN_LIMIT_REACHED`, stop further attempts
-- Route user to pricing or plan management flow
+If you stored object keys and need a fresh GET URL:
 
-### Approved
+```bash
+curl -X POST "$BASE_URL/kyc/secure-download-url" \
+  -H "x-api-key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{ "fileName": "users/<tenantId>/id-front.jpeg" }'
+```
 
-- Mark user as verified
-- Unlock gated actions/features
+## Step 7 — Handle outcomes
 
-### Pending
+### Approved (`APPROVED` / `approved`)
 
-- Ask user to finish missing required step(s)
+Unlock gated features in your product.
 
-### Rejected
+### Pending (`PENDING` / `pending`)
 
-- Show user-friendly rejection reasons
-- Let user retry if your policy allows
+Prompt user to complete selfie (or missing step).
 
-### Failed
+### Rejected (`REJECTED` / `rejected`)
 
-- Treat as system error
-- retry with backoff or surface support workflow
+Show user-friendly reasons from `rejectionReasons` / `errors`. Allow re-upload if policy permits.
+
+### Under review (`UNDER_REVIEW`)
+
+Wait for manual resolution or subscribe to `verification.manual_review_*` webhooks.
+
+### Failed (`FAILED` / `failed`)
+
+Treat as system error; retry with backoff and `Idempotency-Key`.
+
+### Plan limit (`PLAN_LIMIT_REACHED`, HTTP 429)
+
+Monthly quota exceeded (free tier: 20 verifications/month). Upgrade plan or wait for period reset.
+
+### Preflight failures (`BLURRY_IMAGE`, `ADVERSARIAL_IMAGE_DETECTED`)
+
+Ask user to retake photos — do not retry identical uploads. See [Verification & Preflight](/verification-and-preflight).
+
+## Step 8 — Webhooks (recommended)
+
+Register HTTPS endpoints in **Integrations → Webhooks** to receive:
+
+- `verification.completed`
+- `verification.failed`
+- `verification.manual_review_queued`
+- `verification.manual_review_resolved`
+
+See [Outbound Webhooks](/webhooks) for signing verification.

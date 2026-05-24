@@ -3,7 +3,7 @@
  * `auth`: none | clerk | apiKeyOrClerk
  */
 
-export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Admin', 'Config'];
+export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Admin', 'Webhooks', 'Config'];
 
 /** @type {Array<{
  *   id: string,
@@ -255,8 +255,9 @@ export const PLAYGROUND_ENDPOINTS = [
       {
         countryCode: 'TR',
         frontImageUrl: 'https://example-bucket/id-front.jpeg',
-        backImageUrl: null,
-        documentType: 'Government Issued ID'
+        backImageUrl: 'https://example-bucket/id-back.jpeg',
+        integrationExternalRef: 'order-12345',
+        integrationMetadata: { channel: 'api' }
       },
       null,
       2
@@ -305,8 +306,8 @@ export const PLAYGROUND_ENDPOINTS = [
               message: 'Monthly verification limit reached for your plan.',
               details: {
                 tier: 'free',
-                used: 100,
-                limit: 100,
+                used: 20,
+                limit: 20,
                 upgradeHint: 'Upgrade your plan to continue verifications.'
               }
             }
@@ -389,7 +390,7 @@ export const PLAYGROUND_ENDPOINTS = [
       {
         name: 'profileId',
         example: '672a9c2e3f1b2c4d5e6f7890',
-        description: 'MongoDB ObjectId from verify-id / verify-selfie response'
+        description: 'MongoDB ObjectId from id-check / selfie-check response'
       }
     ],
     responseExamples: [
@@ -427,6 +428,29 @@ export const PLAYGROUND_ENDPOINTS = [
         status: 500,
         label: 'Server error',
         body: { status: 'failed', errors: [{ textCode: 'INTERNAL_ERROR', message: '…' }] }
+      }
+    ]
+  },
+  {
+    id: 'kyc-sessions',
+    tag: 'KYC',
+    title: 'Verification session (alias)',
+    description: 'Same handler as GET /kyc/status/:profileId — use profileId as session id.',
+    method: 'GET',
+    path: '/kyc/sessions/:id',
+    auth: 'apiKeyOrClerk',
+    pathParams: [
+      {
+        name: 'id',
+        example: '672a9c2e3f1b2c4d5e6f7890',
+        description: 'Profile / session MongoDB ObjectId'
+      }
+    ],
+    responseExamples: [
+      {
+        status: 200,
+        label: 'Same as status endpoint',
+        body: { id: '672a9c2e3f1b2c4d5e6f7890', status: 'PENDING', progress: {} }
       }
     ]
   },
@@ -479,8 +503,10 @@ export const PLAYGROUND_ENDPOINTS = [
           totalVerifications: 42,
           approvedCount: 30,
           rejectedCount: 5,
-          pendingCount: 7,
-          approvalRate: 71
+          pendingCount: 5,
+          underReviewCount: 2,
+          approvalRate: 71,
+          activeApiKeys: 3
         }
       },
       { status: 401, label: 'Unauthorized', body: { status: 'failed', errors: [{ message: 'Unauthorized' }] } }
@@ -500,10 +526,17 @@ export const PLAYGROUND_ENDPOINTS = [
         label: 'OK',
         body: {
           settings: {
-            verificationRules: { requireIdCard: true, requireSelfie: true },
-            thresholds: { minConfidence: '0.7' }
+            verificationRules: { requireIdCard: true, requireSelfie: true, logicOperator: 'AND' },
+            thresholds: {
+              fullNameConfidence: 0.8,
+              matchConfidence: 92,
+              idMinCaptureSharpness: 0.38,
+              selfieMinCaptureSharpness: 0.38,
+              idMinImageQuality: 0.62
+            },
+            integration: { webhookUrl: '', hasWebhookSecret: false, webhookEvents: [] }
           },
-          defaults: {}
+          defaults: { thresholds: { matchConfidence: 92, idMinCaptureSharpness: 0.38 } }
         }
       },
       {
@@ -523,8 +556,8 @@ export const PLAYGROUND_ENDPOINTS = [
     auth: 'clerk',
     body: JSON.stringify(
       {
-        verificationRules: { requireIdCard: true, requireSelfie: true },
-        thresholds: { minConfidence: '0.75' }
+        verificationRules: { requireSelfie: true },
+        thresholds: { idMinCaptureSharpness: 0.4, matchConfidence: 94 }
       },
       null,
       2
@@ -643,6 +676,104 @@ export const PLAYGROUND_ENDPOINTS = [
         }
       },
       { status: 404, label: 'Not found', body: { error: 'API key not found' } }
+    ]
+  },
+  {
+    id: 'admin-webhooks-list',
+    tag: 'Webhooks',
+    title: 'List outbound webhooks',
+    description: 'Up to 10 webhooks per tenant. Clerk JWT only.',
+    method: 'GET',
+    path: '/admin/webhooks',
+    auth: 'clerk',
+    responseExamples: [
+      {
+        status: 200,
+        label: 'OK',
+        body: {
+          webhooks: [
+            {
+              id: '682a….wh01',
+              name: 'Production',
+              url: 'https://api.example.com/armith/hook',
+              events: ['verification.completed', 'verification.failed'],
+              dataFields: ['externalRef', 'metadata'],
+              isActive: true,
+              signingKeyHint: 'a1b2…9f0'
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    id: 'admin-webhooks-create',
+    tag: 'Webhooks',
+    title: 'Create webhook',
+    description: 'Returns rawKey once when signingKey.source is generate_new.',
+    method: 'POST',
+    path: '/admin/webhooks',
+    auth: 'clerk',
+    body: JSON.stringify(
+      {
+        name: 'Production backend',
+        url: 'https://api.example.com/armith/webhooks',
+        events: ['verification.completed', 'verification.failed'],
+        dataFields: ['country', 'externalRef'],
+        signingKey: { source: 'generate_new' }
+      },
+      null,
+      2
+    ),
+    responseExamples: [
+      {
+        status: 201,
+        label: 'Created',
+        body: {
+          webhook: { id: '682a….wh01', name: 'Production backend', url: 'https://…', isActive: true },
+          rawKey: '64-char-hex-shown-once'
+        }
+      }
+    ]
+  },
+  {
+    id: 'admin-webhook-deliveries',
+    tag: 'Webhooks',
+    title: 'Webhook delivery log',
+    method: 'GET',
+    path: '/admin/webhook-deliveries',
+    auth: 'clerk',
+    responseExamples: [
+      {
+        status: 200,
+        label: 'OK',
+        body: {
+          deliveries: [
+            {
+              id: 'del_01',
+              webhookId: '682a….wh01',
+              eventType: 'verification.completed',
+              status: 'delivered',
+              httpStatus: 200,
+              createdAt: '2026-05-24T12:00:00.000Z'
+            }
+          ],
+          pagination: { page: 1, totalPages: 1 }
+        }
+      }
+    ]
+  },
+  {
+    id: 'admin-webhooks-replay',
+    tag: 'Webhooks',
+    title: 'Replay terminal webhook',
+    description: 'Optional ?webhookId= and ?useStoredDelivery=true',
+    method: 'POST',
+    path: '/admin/webhooks/replay/:profileId',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'Replayed', body: { success: true, delivered: 1 } }
     ]
   },
   {

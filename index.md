@@ -1,52 +1,58 @@
 # Armith KYC API Documentation
 
-Armith is an **API-only** KYC platform.
+Armith is an **API-only** KYC platform with a dashboard for operations, settings, API keys, and webhooks.
 
 <script setup>
 const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
 </script>
 
 <a :href="appUrl" target="_blank" rel="noopener noreferrer" class="armith-btn-primary">
-  Uygulamaya Git
+  Open dashboard
 </a>
 
-- We currently support KYC flows through **REST API endpoints**
-- We do **not** provide SDKs at this stage
-- You can integrate from any backend or frontend stack that can call HTTP APIs
+- KYC flows run through **REST API endpoints** (no official SDKs yet)
+- Integrate from any stack that can send HTTP requests and upload to pre-signed URLs
+- Configure thresholds, webhooks, and API keys from the dashboard **Integrations** area
 
 ## What This Documentation Covers
 
-1. Generate API key from dashboard
-2. Authenticate API requests correctly
-3. Complete KYC flow endpoint by endpoint
-4. Validate responses and handle outcomes
-5. Use live REST playground to send real requests
+1. Create and manage **API keys** (`Integrations → API Keys`)
+2. Authenticate KYC requests (`x-api-key`, Clerk session, or capture session token)
+3. Complete the upload → ID check → selfie check → status flow
+4. Configure **outbound webhooks** with signing keys and optional payload fields
+5. Understand **preflight gates** (blur, adversarial image checks) and verification outcomes
+6. Use the live **REST API Playground** to inspect requests and responses
 
 ## Base URL
 
 Use your assigned API base URL:
 
-- Sandbox: `https://armith-backend-live.onrender.com`
-- Production: `https://api.armith.com`
+- **Sandbox / shared dev backend:** `https://armith-backend-live.onrender.com`
+- **Production (when provisioned):** `https://api.armith.com`
 
-Ask Armith support for your tenant base URL if your account uses a dedicated domain.
+Ask Armith support for a dedicated tenant domain if your account uses one.
+
+**Dashboard (SPA):** `https://armith.onrender.com`
 
 ## Supported KYC Pattern (Current)
 
-The current implementation is built around this API flow:
+1. Sign in to the dashboard and create an API key under **Integrations → API Keys**
+2. (Optional) Register **outbound webhooks** under **Integrations → Webhooks**
+3. Request pre-signed upload URLs (`POST /kyc/upload-url`)
+4. Upload ID and selfie images directly to object storage (R2)
+5. Run ID verification (`POST /kyc/id-check`)
+6. Run selfie verification (`POST /kyc/selfie-check`) when required
+7. Poll session status (`GET /kyc/status/:profileId` or `GET /kyc/sessions/:id`)
+8. Receive terminal events on your webhook endpoint (or poll status)
 
-1. Sign in to dashboard and create API key
-2. Request pre-signed upload URLs
-3. Upload ID and selfie images to object storage
-4. Run ID verification
-5. Run selfie verification
-6. Query profile status
+## Recommended Reading Order
 
-## Recommended Reading Order (Domino Flow)
-
-1. `Getting Started`
-2. `Authentication`
-3. `Flow Overview`
-4. `Step-by-Step API Flow`
-5. `Statuses and Errors`
-6. `REST API Playground`
+1. [Getting Started](/getting-started)
+2. [Authentication](/authentication)
+3. [Integrations Dashboard](/integrations-dashboard)
+4. [Flow Overview](/kyc-flow-overview)
+5. [Step-by-Step API Flow](/kyc-api-flow)
+6. [Verification & Preflight](/verification-and-preflight)
+7. [Outbound Webhooks](/webhooks)
+8. [Statuses and Errors](/errors-and-statuses)
+9. [REST API Playground](/api-reference)
