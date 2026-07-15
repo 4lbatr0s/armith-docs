@@ -262,7 +262,7 @@ async function sendRequest() {
         <section class="api-playground-panel api-playground-panel-dark">
           <h3 class="api-playground-heading">Reference responses</h3>
           <p class="api-playground-desc">
-            Endpointe tiklayinca requeste karsilik olasi basarili ve hatali cevaplar ayrik bloklarda gorunur.
+            When you select an endpoint below, expected success and error response examples appear in separate panels.
           </p>
 
           <div class="api-playground-response-grid">
