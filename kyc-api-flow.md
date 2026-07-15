@@ -1,6 +1,6 @@
 # Step-by-Step API Flow
 
-Practical walkthrough for API-only KYC integration.
+Practical walkthrough for API-only KYC integration — direct REST API pattern with all verification types.
 
 ## Step 0 — Environment variables
 
@@ -95,7 +95,36 @@ Key response fields:
 - `confidenceScores` (includes `matchConfidence` 0–100)
 - `rejectionReasons`
 
-## Step 5 — Get profile status
+## Step 5 — Run eID NFC verification (optional)
+
+For countries with eID chips (requires mobile NFC read):
+
+```bash
+curl -X POST "$BASE_URL/kyc/eid-check" \
+  -H "x-api-key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: eid-check-<profileId>" \
+  -d '{
+    "profileId": "<PROFILE_ID>",
+    "countryCode": "TR",
+    "chipData": {
+      "documentNumber": "U12345678",
+      "dateOfBirth": "19900101",
+      "expiryDate": "20300101",
+      "nationality": "TUR",
+      "surname": "LOVELACE",
+      "givenNames": "ADA",
+      "issuerAuthority": "TR-IC-DIRECTORATE"
+    },
+    "signatureAlg": "SHA256WithRSA",
+    "certificateIssuer": "CN=TR-ID-Signing-CA",
+    "certificateSubject": "CN=TR-ID-CHIP-U12345678"
+  }'
+```
+
+See [eID NFC Verification](/eid-nfc-verification).
+
+## Step 6 — Get profile status
 
 ```bash
 curl -X GET "$BASE_URL/kyc/status/<PROFILE_ID>" \
@@ -108,11 +137,13 @@ Returns:
 
 - Uppercase `status` (`PENDING`, `APPROVED`, …)
 - `progress` — which steps completed
-- `idVerification`, `selfieVerification` detail objects
+- `idVerification`, `selfieVerification`, `eidNfcVerification` detail objects
+- `screening` status if configured
 - `thresholds` — flat threshold snapshot used for evaluation
 - `session.lifecycle` — high-level state (`awaiting_selfie`, `approved`, …)
+- `images` — stored image URLs
 
-## Step 6 — Secure download (optional)
+## Step 7 — Secure download (optional)
 
 If you stored object keys and need a fresh GET URL:
 
@@ -123,7 +154,45 @@ curl -X POST "$BASE_URL/kyc/secure-download-url" \
   -d '{ "fileName": "users/<tenantId>/id-front.jpeg" }'
 ```
 
-## Step 7 — Handle outcomes
+## Async Verification
+
+Set `"async": true` on ID/selfie/eID checks to enqueue verification to BullMQ:
+
+```bash
+curl -X POST "$BASE_URL/kyc/id-check" \
+  -H "x-api-key: $API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "countryCode": "TR",
+    "frontImageUrl": "<URL>",
+    "async": true
+  }'
+```
+
+Response: `202 Accepted` with `{ status: "processing", profileId, runId }`.
+
+Poll `GET /kyc/status/:profileId` or wait for webhook. See [Async Verification](/async-verification).
+
+## Sandbox Testing
+
+When using `ak_test_` keys, simulate scenarios with `sandboxScenario`:
+
+```bash
+curl -X POST "$BASE_URL/kyc/id-check" \
+  -H "x-api-key: ak_test_<SANDBOX_KEY>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "countryCode": "TR",
+    "frontImageUrl": "https://example.com/sandbox-id.jpg",
+    "sandboxScenario": "approved"
+  }'
+```
+
+Available scenarios: `approved`, `rejected_blur`, `rejected_tampering`, `rejected_mismatch`, `under_review`.
+
+See [Sandbox Testing](/sandbox-testing).
+
+## Step 8 — Handle outcomes
 
 ### Approved (`APPROVED` / `approved`)
 
@@ -153,7 +222,7 @@ Monthly quota exceeded (free tier: 20 verifications/month). Upgrade plan or wait
 
 Ask user to retake photos — do not retry identical uploads. See [Verification & Preflight](/verification-and-preflight).
 
-## Step 8 — Webhooks (recommended)
+## Step 9 — Webhooks (recommended)
 
 Register HTTPS endpoints in **Integrations → Webhooks** to receive:
 
@@ -163,3 +232,10 @@ Register HTTPS endpoints in **Integrations → Webhooks** to receive:
 - `verification.manual_review_resolved`
 
 See [Outbound Webhooks](/webhooks) for signing verification.
+
+## Complete Verifications List (Admin)
+
+```bash
+curl -X GET "$BASE_URL/admin/verifications?page=1&limit=10&status=APPROVED" \
+  -H "Authorization: Bearer <CLERK_JWT>"
+```

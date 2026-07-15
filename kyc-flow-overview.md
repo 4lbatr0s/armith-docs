@@ -1,102 +1,147 @@
 # KYC Flow Overview
 
-High-level view of the current Armith KYC pipeline.
+High-level view of the Armith KYC verification pipeline, covering all supported verification types and integration patterns.
 
 ## Product Scope
 
-**Supported today:**
+### Supported today
 
-- REST API verification (ID + selfie)
-- Dashboard operations, settings, webhooks, API keys
-- Outbound webhooks with HMAC signing
+- REST API verification (ID + selfie + eID NFC)
+- AI-powered document extraction and face matching via Groq LLM
 - Deterministic preflight (blur, adversarial checks) before LLM
-- Manual review queue and auto-escalation
+- Hosted capture pages for web and mobile channels
+- React Native SDK for native mobile capture
+- Outbound webhooks with HMAC signing and multi-webhook fan-out
+- KYB (Know Your Business) entity verification
+- AML/sanctions/PEP screening
+- Async verification with BullMQ queue
+- Sandbox testing with deterministic scenarios
+- Manual review queue with auto-escalation, assignee, and SLA tracking
+- Configurable verification workflows (ordered steps)
+- Admin analytics, audit log, and data subject rights (GDPR)
+- Multi-tenant dashboard with role-based access (RBAC)
+- Config presets (strict, balanced, lenient)
+- Idempotency keys on all verification writes
 
-**Not supported today:**
+### Not supported today
 
-- Official client SDKs
-- Drop-in UI widgets (build your own capture UI or use dashboard demo)
+- Drop-in web UI widget (use hosted capture pages)
+- Additional biometric liveness vendors (current: Groq LLM-based)
+- Document type detection (passport, residence permit — roadmap)
 
-## End-to-End Flow
+## Integration Patterns
+
+| Pattern | Effort | Docs |
+|---------|--------|------|
+| **Direct REST API** | Build your own capture UI | [Step-by-Step API Flow](/kyc-api-flow) |
+| **Hosted Capture Pages** | Redirect-based, low effort | [Integrator Hosted Flow](/integrator-hosted-flow) |
+| **Mobile SDK** | React Native native flow | [Mobile SDK](/mobile-sdk) |
+
+## Verification Pipeline
 
 ```mermaid
 flowchart LR
-  A[Upload URLs] --> B[PUT to R2]
-  B --> C[Preflight]
-  C --> D[LLM + rules]
-  D --> E[Persist profile]
-  E --> F{Terminal?}
-  F -->|yes| G[Webhook + status]
-  F -->|no| H[Pending / review]
+  subgraph Input
+    A1[Direct API Upload]
+    A2[Hosted Capture]
+    A3[Mobile SDK]
+  end
+
+  subgraph Preflight
+    B[URL validation]
+    C[Adversarial scan]
+    D[Blur probe]
+    E[Face likelihood]
+  end
+
+  subgraph LLM
+    F[Groq Vision<br/>Llama 4 Scout]
+  end
+
+  subgraph Validation
+    G[Schema parse]
+    H[Country validators<br/>TC checksum, MRZ]
+    I[Threshold check<br/>confidence, age, expiry]
+  end
+
+  subgraph Output
+    J[Persist profile]
+    K[Webhook delivery]
+    L[Status poll]
+  end
+
+  A1 & A2 & A3 --> B --> C --> D --> E --> F --> G --> H --> I --> J --> K
+  J --> L
 ```
 
-### Step 1 — Discover capabilities
+## Verification Types
 
-- `GET /kyc/countries` — supported country codes
-- `GET /kyc/llm-status` — LLM provider readiness
+### ID Card Verification (`POST /kyc/id-check`)
 
-### Step 2 — Upload URLs
+1. Upload front (+ optional back) via `POST /kyc/upload-url`
+2. Preflight: URL validation → adversarial heuristics → blur probe
+3. Load tenant config, compile YAML prompt for country
+4. Call Groq vision LLM with images
+5. Server pipeline: schema parse → placeholder/fake-data penalties → country validator (e.g. TR TC checksum) → age/expiry rules → confidence thresholds → MRZ cross-check
+6. **Critical errors → REJECTED; warnings only → still APPROVED**
+7. If ID passes and selfie is required → profile stays **PENDING** until selfie completes
 
-`POST /kyc/upload-url` for each asset:
+### Selfie Verification (`POST /kyc/selfie-check`)
 
-- `id-front` (required)
-- `id-back` (country-dependent)
-- `selfie`
+1. Upload selfie; send `profileId`, `idPhotoUrl` (ID front portrait), and `selfieUrls`
+2. Compile selfie prompt, send ID portrait + selfie to Groq
+3. Server pipeline: schema parse → `evaluateSelfieRules()` (match %, spoofing, liveness, quality, lighting, face size/coverage)
+4. **Any validation error → REJECTED** (stricter than ID)
+5. Overall profile status: both checkpoints must pass for **APPROVED**
 
-Returns presigned `uploadUrl` and tenant-scoped `downloadUrl`.
+### eID NFC Verification (`POST /kyc/eid-check`)
 
-### Step 3 — Upload bytes
+Cryptographic verification of embedded chip data against visual document fields:
 
-`PUT` JPEG/PNG directly to `uploadUrl` with matching `Content-Type`.
+1. Mobile app reads eID chip via NFC
+2. Chip data submitted to Armith for validation
+3. Server validates: chip authentication, SOD signature, document data match, visual data match
+4. Combined authenticity score computed from cryptographic + visual checks
 
-### Step 4 — Preflight (automatic)
+See [eID NFC Verification](/eid-nfc-verification).
 
-Before any LLM call, the backend validates:
+### KYB — Business Verification (`/kyb/*`)
 
-- URL reachability and R2 HEAD metadata
-- Image size, MIME, optional min resolution
-- **Adversarial heuristics** on raw bytes
-- **Laplacian blur score** vs tenant `minCaptureSharpness` (default 0.38)
-- Selfie **face likelihood** heuristic
+Know Your Business entity verification:
 
-Failures return `400` with codes like `BLURRY_IMAGE`, `ADVERSARIAL_IMAGE_DETECTED`, `NO_FACE_DETECTED`.
+- Create KYB profiles with legal name, registration number, jurisdiction
+- Link related person KYC profiles (directors, beneficial owners)
+- Track verification status per entity
+- API key or Clerk auth
 
-See [Verification & Preflight](/verification-and-preflight).
+See [KYB Verification](/kyb-verification).
 
-### Step 5 — ID verification
+## Screening (AML/Sanctions/PEP)
 
-`POST /kyc/id-check` with image URLs and `countryCode`.
+Optional screening step after ID verification:
 
-Outputs:
+| Provider | Type | Status |
+|----------|------|--------|
+| OpenSanctions | Sanctions + PEP | Active |
+| Diligence | Screener | Configurable |
+| ComplyAdvantage | Sanctions + PEP | Configurable |
 
-- `profileId` (save this)
-- Checkpoint `idStatus` / overall `status`
-- Extracted fields and confidence scores
-- Optional `integrationExternalRef` / `integrationMetadata` for webhooks
+Screening results are stored on the profile: `screening.status`, `screening.hits`, `screening.sanctionsMatch`, `screening.pepMatch`.
 
-**ID checkpoint is lenient:** warnings may still approve; only **critical** errors reject.
+See [Screening](/screening).
 
-### Step 6 — Selfie verification
+## Async Verification
 
-`POST /kyc/selfie-check` with `idPhotoUrl`, `selfieUrls` (1–5), and `profileId` when both steps are required.
+Verification can run synchronously (default) or asynchronously via BullMQ:
 
-**Selfie checkpoint is strict:** any validation error → rejected.
+- **Sync:** Request → preflight → LLM → validation → response
+- **Async (`async: true`):** Request → preflight → enqueue → 202 Accepted → worker processes → webhook on completion
 
-### Step 7 — Status / webhooks
-
-- Poll: `GET /kyc/status/:profileId` or `GET /kyc/sessions/:id`
-- Push: outbound webhooks on terminal and manual-review events
-
-### Step 8 — Operationalize
-
-- Log `profileId` and `correlationId`
-- Handle `UNDER_REVIEW` in ops workflows
-- Use `Idempotency-Key` on retries
-- Respect `outcomeSemantics` (`FINAL` vs `RETRY_SUGGESTED`) on terminal webhooks
+See [Async Verification](/async-verification).
 
 ## Status Model
 
-### Checkpoint responses (`id-check`, `selfie-check`)
+### Checkpoint responses (`id-check`, `selfie-check`, `eid-check`)
 
 Lowercase strings in the immediate API response:
 
@@ -119,10 +164,6 @@ Uppercase persisted profile status:
 | `PENDING` | Awaiting next required step |
 | `UNDER_REVIEW` | Manual review queue (auto or operator-enqueued) |
 
-::: info
-Always design integrations to handle both casings: checkpoint endpoints return lowercase; status endpoint returns uppercase profile `status`.
-:::
-
 ## Decision Authority
 
 The **server** makes the final approve/reject decision using:
@@ -130,5 +171,33 @@ The **server** makes the final approve/reject decision using:
 - Tenant thresholds from `KycConfiguration`
 - Deterministic validators (TC checksum, MRZ, age, expiry)
 - LLM output (Groq vision model) as structured advisory input
+- LLM-reported image quality capped by deterministic capture sharpness scores
 
-LLM-reported image quality may be **capped** by deterministic capture sharpness scores.
+## Verification Workflows
+
+Tenants can define ordered verification pipelines with custom steps:
+
+```json
+{
+  "steps": [
+    { "id": "id-1", "type": "id", "required": true },
+    { "id": "selfie-1", "type": "selfie", "required": true },
+    { "id": "screening-1", "type": "screening", "required": false }
+  ]
+}
+```
+
+See [Verification Workflows](/workflows).
+
+## Webhooks
+
+Armith delivers HTTPS POST notifications on terminal and lifecycle events:
+
+| Event | Trigger |
+|-------|---------|
+| `verification.completed` | Terminal success |
+| `verification.failed` | Terminal failure |
+| `verification.manual_review_queued` | Escalated to manual review |
+| `verification.manual_review_resolved` | Manual review decision made |
+
+See [Outbound Webhooks](/webhooks).

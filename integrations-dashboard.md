@@ -1,6 +1,6 @@
 # Integrations Dashboard
 
-Operational configuration lives in the dashboard at **Integrations** (`/integrations`), not under Profile.
+Operational configuration lives in the dashboard at **Integrations** (`/integrations`), not under Profile. Admin settings, manual review, and analytics are under **Admin** (`/admin`).
 
 ## Tabs
 
@@ -19,8 +19,9 @@ The legacy path `Profile → Security` is **deprecated**. Old `?tab=security` li
 
 1. Open **Integrations → API Keys**
 2. Enter a descriptive name (e.g. `production-backend`)
-3. Copy the full `ak_live_…` token immediately — it is **never shown again**
-4. Store in your secret manager; use only from server-side code
+3. Select environment: **Live** (`ak_live_`) for production or **Sandbox** (`ak_test_`) for testing
+4. Copy the full token immediately — it is **never shown again**
+5. Store in your secret manager; use only from server-side code
 
 ### Revoke a key
 
@@ -63,6 +64,14 @@ Each webhook has:
 
 See [Outbound Webhooks](/webhooks) for signing verification and payload shapes.
 
+### Delivery monitoring
+
+Webhook delivery status is visible in:
+
+- **Integrations → Webhooks** — last delivery timestamp per webhook
+- **Admin → Webhook Deliveries** — full delivery log with filters (`?failedOnly`, `?deadLetter`, `?webhookId`)
+- Retry failed deliveries directly from the dashboard or API
+
 ### Legacy single-webhook migration
 
 If you configured webhooks before the multi-webhook UI, you may still have:
@@ -75,26 +84,97 @@ on `KycConfiguration`. These remain active **until you create at least one Webho
 
 Legacy fields can still be updated via `PUT /admin/settings` → `integration` block, but the dashboard recommends creating webhooks in **Integrations → Webhooks**.
 
-## Settings Tab (Admin)
+## Settings (Admin → Settings)
 
 Verification rules and thresholds are configured under **Admin → Settings** (`/admin?tab=settings`), including:
 
-- Require ID / selfie, AND/OR logic
-- Confidence thresholds (flat keys like `fullNameConfidence`, `matchConfidence`)
+- **Verification steps** — require ID / selfie, AND/OR logic, partial submission
+- **Confidence thresholds** — flat keys like `fullNameConfidence`, `matchConfidence`, `identityNumberConfidence`
 - **Capture sharpness** (`idMinCaptureSharpness`, `selfieMinCaptureSharpness`) — Laplacian preflight gate (default **0.38**)
-- Image quality floors (`idMinImageQuality`, `selfieMinImageQuality`)
-- Age rules, MRZ confidence, document vitality, etc.
+- **Image quality floors** (`idMinImageQuality`, `selfieMinImageQuality`)
+- **Age rules** — min/max age, enforcement toggle
+- **MRZ confidence** — minimum MRZ read confidence
+- **Document vitality** — minimum document liveness score
+- **Spoofing/max risk** — maximum acceptable spoofing risk
 
-Advanced nested fields (`minOverallConfidence`, `maxTamperingRisk`, `verificationFeatures`) are available via `PATCH /config` with optimistic locking.
+Advanced nested fields (`minOverallConfidence`, `maxTamperingRisk`, `verificationFeatures`, `validationRules`) are available via `PATCH /config` with optimistic locking.
 
-## Manual Review
+### Preset configurations
 
-Profiles in `UNDER_REVIEW` appear in the admin manual review queue:
+Quickly switch between threshold bundles:
 
-- `GET /admin/manual-reviews`
-- `POST /admin/manual-reviews/:profileId/resolve` with `{ "decision": "APPROVED" | "REJECTED" }`
+| Preset | Use case |
+|--------|----------|
+| `strict` | High-security flows (financial onboarding) |
+| `balanced` | General purpose (default) |
+| `lenient` | Low-risk flows with higher pass rates |
 
-Webhook events: `verification.manual_review_queued`, `verification.manual_review_resolved`.
+Apply via `POST /config/preset` with body `{ "preset": "balanced" }`.
+
+## Manual Review (Admin → Manual Reviews)
+
+Profiles in `UNDER_REVIEW` status appear in the manual review queue. Reviewers can:
+
+### List reviews
+
+`GET /admin/manual-reviews?page=1&limit=10&source=auto`
+
+Filter by source: `auto` (auto-escalated) or `manual` (admin-enqueued).
+
+### Enqueue a profile
+
+`POST /admin/manual-reviews/:profileId/enqueue`
+
+Body:
+```json
+{
+  "assigneeLabel": "reviewer@example.com",
+  "slaDeadlineMinutes": 240
+}
+```
+
+### Assign or update
+
+`PATCH /admin/manual-reviews/:profileId`
+
+```json
+{
+  "assigneeLabel": "senior-reviewer@example.com",
+  "note": "Escalated per policy"
+}
+```
+
+### Resolve
+
+`POST /admin/manual-reviews/:profileId/resolve`
+
+```json
+{
+  "decision": "APPROVED",
+  "note": "Document verified manually — hologram present"
+}
+```
+
+### Audit trail
+
+Every manual review action is recorded in the profile's `manualReviewAuditTrail`:
+
+```json
+[
+  { "action": "QUEUED", "at": "2026-06-01T10:00:00Z", "actorUserId": "user_abc" },
+  { "action": "REASSIGNED", "at": "2026-06-01T11:00:00Z", "actorUserId": "user_def", "assigneeLabel": "reviewer@example.com" },
+  { "action": "RESOLVED_APPROVED", "at": "2026-06-01T12:00:00Z", "actorUserId": "user_def" }
+]
+```
+
+### Auto-escalation rules
+
+Profiles automatically enter `UNDER_REVIEW` when:
+- Warning count ≥ `maxWarningCount` (default 3)
+- Composite `riskScore` > `riskScoreCeiling` (default 55)
+- Borderline confidence or spoofing bands (`verificationFeatures`)
+
+Webhook: `verification.manual_review_queued` fires on escalation.
 
 ## Capture Sessions
 
@@ -102,4 +182,22 @@ For hosted capture flows, mint a short-lived token from the verification detail 
 
 `POST /admin/verifications/:profileId/capture-session`
 
-Returns `{ token, expiresAtEpochSec, headerName: "X-Verification-Session" }`.
+Returns:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs…",
+  "expiresAtEpochSec": 1750000000,
+  "headerName": "X-Verification-Session"
+}
+```
+
+The token is write-scoped for the capture UI and read-only for status polling. See [Integrator Hosted Flow](/integrator-hosted-flow).
+
+## Verification List (Admin → Verifications)
+
+Browse, filter, and inspect all KYC profiles for your tenant:
+
+- **List:** `GET /admin/verifications?page=1&limit=10&status=APPROVED&country=TR`
+- **Detail:** `GET /admin/verifications/:profileId` — full verification with images, thresholds, evidence
+- **Events:** `GET /admin/verifications/:profileId/events` — timeline of lifecycle events
+- **Delete:** `DELETE /admin/verifications/:profileId` — deletes profile, validations, webhook deliveries, and optionally R2 objects

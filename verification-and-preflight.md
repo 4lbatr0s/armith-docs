@@ -5,7 +5,7 @@ Armith runs **deterministic preflight checks** before calling the LLM. This catc
 ## Pipeline Summary
 
 ```
-Image URLs → HEAD/size/MIME → adversarial byte scan → blur probe → (selfie) face heuristic → LLM → server thresholds → persist
+Image URLs → HEAD/size/MIME → adversarial byte scan → blur probe → (selfie) face heuristic → LLM → server thresholds → (optional) screening → persist
 ```
 
 The server makes the **final** approve/reject decision. LLM output is structured advisory input capped by capture quality where applicable.
@@ -24,7 +24,7 @@ Scans the first ~64KB of each image for suspicious patterns:
 
 - Abnormal entropy + high-frequency energy combinations
 - Repeating byte blocks (non-natural compression)
-- Metadata injection strings
+- Metadata injection strings (prompt injection defense)
 
 Failure: `ADVERSARIAL_IMAGE_DETECTED` (HTTP 400, code 3008 family).
 
@@ -45,10 +45,6 @@ Tenant value overrides env fallback when set.
 
 Failure: `BLURRY_IMAGE` (code 3001) — *"ID card image is too blurry to read clearly."*
 
-::: tip
-Capture sharpness (`minCaptureSharpness`) is **not** the same as LLM-reported `imageQuality`. A sharp photo can still fail extraction; a blurry photo should fail preflight even if the model over-scores quality.
-:::
-
 ### Selfie face likelihood
 
 Lightweight heuristic on selfie bytes before LLM.
@@ -66,6 +62,37 @@ effectiveImageQuality = min(llmImageQuality, captureSharpnessScore)
 ```
 
 This prevents inflated LLM quality scores on blurry captures that somehow passed older configs.
+
+## Prompt Architecture
+
+Armith uses YAML prompt templates compiled at runtime with Handlebars:
+
+- **System + user message split** — principles/schema in system; thresholds + few-shots in user
+- **Shared scoring rubric** — `backend/verification/prompts/partials/scoring-rubric.v1.yaml`
+- **Structured `reasoning` JSON** — persisted as `llmReasoning` on validation records
+- **Per-prompt temperature** — ID `0.0`, selfie `0.08` (YAML header)
+- **Prompt injection defense** in all prompts — image text is never treated as model instructions
+
+### A/B Prompt Testing
+
+Env vars enable A/B routing for prompt variants:
+
+| Env var | Purpose |
+|---------|---------|
+| `PROMPT_AB_CANDIDATE_VERSION` | Candidate prompt version identifier |
+| `PROMPT_AB_TRAFFIC_PCT` | Percentage of traffic to route to candidate (0–100) |
+
+## LLM Provider
+
+Default: **Groq** vision model (`meta-llama/llama-4-scout-17b-16e-instruct` class). Check `GET /kyc/llm-status` for live configuration.
+
+| Feature | Detail |
+|---------|--------|
+| Primary provider | Groq |
+| Vision model | `meta-llama/llama-4-scout-17b-16e-instruct` (or similar) |
+| Fallback provider | `FALLBACK_LLM_PROVIDER` / OpenAI env vars |
+| Two-stage routing | Opt-in: edge-case models for ambiguous results |
+| Ensemble verification | Opt-in: multiple model inference for high-risk cases |
 
 ## Threshold Layers
 
@@ -97,10 +124,22 @@ Common operator-facing keys:
 Advanced fields not exposed as flat admin patches:
 
 - `idCardThresholds.minOverallConfidence`, `maxTamperingRisk`
-- `validationRules` — TC checksum, MRZ cross-validation, `maxWarningCount`, expiry rules
-- `verificationFeatures` — auto manual review bands, `riskScoreCeiling`
+- `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles`
+- `validationRules` — TC checksum, MRZ cross-validation, `maxWarningCount`, expiry rules, `warningEscalationStatus`
+- `verificationFeatures` — auto manual review bands, `riskScoreCeiling`, `autoReviewConfidenceMin/Max`
+- `adapters` — screening provider, face match, liveness
 
-Presets: `strict`, `balanced`, `lenient` via `GET /config/presets` and `POST /config/preset`.
+### Presets
+
+`GET /config/presets` lists available threshold bundles:
+
+| Preset | Description |
+|--------|-------------|
+| `strict` | High-security — lower tolerances, higher rejection |
+| `balanced` | General purpose (default) |
+| `lenient` | Higher pass rates, lower security |
+
+Apply via `POST /config/preset`.
 
 ## ID vs Selfie Strictness
 
@@ -108,6 +147,7 @@ Presets: `strict`, `balanced`, `lenient` via `GET /config/presets` and `POST /co
 |------------|------------|-------|
 | **ID** | Lenient | Warnings alone may still approve; only **critical** errors reject |
 | **Selfie** | Strict | Any validation error → rejected |
+| **eID NFC** | Strict | Both cryptographic and visual data must match |
 
 ## Auto Manual Review
 
@@ -115,7 +155,7 @@ Profiles may enter `UNDER_REVIEW` when:
 
 - Warning count ≥ `maxWarningCount` (default 3)
 - Composite `riskScore` > `riskScoreCeiling` (default 55)
-- Borderline confidence or spoofing bands (`verificationFeatures`)
+- Borderline confidence or spoofing bands (`verificationFeatures.autoReview*`)
 
 Webhook: `verification.manual_review_queued`.
 
@@ -124,24 +164,39 @@ Webhook: `verification.manual_review_queued`.
 Examples enforced server-side:
 
 - Turkish ID (TC) checksum
-- MRZ cross-validation
+- MRZ cross-validation (fields must match between printed and machine-readable zones)
 - Age and expiry date rules
 - Tampering risk ceiling
 - Document condition allow-list
+- Gender consistency (optional)
 
-## LLM Provider
+## Screening (Post-Verification)
 
-Default: **Groq** vision model (`meta-llama/llama-4-scout-17b-16e-instruct` class). Check `GET /kyc/llm-status` for live configuration.
+Optional AML/sanctions/PEP screening runs after ID verification when configured:
 
-Optional fallback provider via `FALLBACK_LLM_PROVIDER` / OpenAI env vars on the backend.
+- Provider: OpenSanctions (default), ComplyAdvantage, or Diligence
+- Results stored on profile: `screening.status`, `screening.hits`, `sanctionsMatch`, `pepMatch`
+- Screening can block profiles or flag for manual review
+
+See [Screening](/screening).
+
+## Policy Pack System
+
+Armith supports policy packs for country-specific verification rules:
+
+- `meta.policy.bundleVersion` — version of the active policy bundle
+- `policyPackId` / `policyPackVersion` — specific pack identifier (when enabled)
+- Packs are versioned and can be rolled back via `policyRevisionService`
 
 ## Tuning Guidance
 
 | Symptom | Adjustment |
 |---------|------------|
 | Too many blurry uploads reaching LLM | Lower `idMinCaptureSharpness` / `selfieMinCaptureSharpness` (stricter) |
-| Legitimate users rejected for motion blur | Slightly lower threshold (e.g. 0.32) or improve capture UX |
+| Legitimate users rejected for motion blur | Slightly raise threshold (e.g. 0.32) or improve capture UX |
 | False face match approvals | Raise `matchConfidence` (e.g. 95+) |
 | Too many auto reviews | Widen auto-review bands or raise `riskScoreCeiling` |
+| Too many false rejections | Switch to `lenient` preset or adjust individual thresholds |
+| High-risk documents passing | Switch to `strict` preset or lower `maxTamperingRisk` |
 
-Changes via **Admin → Settings** apply to the tenant's TR production config document immediately for new verifications.
+Changes via **Admin → Settings** apply to the tenant's production config document immediately for new verifications.

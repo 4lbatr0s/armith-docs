@@ -3,7 +3,7 @@
  * `auth`: none | clerk | apiKeyOrClerk
  */
 
-export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Admin', 'Webhooks', 'Config'];
+export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Integrator', 'KYB', 'Admin', 'Webhooks', 'Config'];
 
 /** @type {Array<{
  *   id: string,
@@ -863,6 +863,411 @@ export const PLAYGROUND_ENDPOINTS = [
         label: 'Unauthorized',
         body: { error: 'Unauthorized' }
       }
+    ]
+  },
+  // ─── Health ─────────────────────────────────────────────
+  {
+    id: 'health-ready',
+    tag: 'Health',
+    title: 'Readiness check',
+    description: 'Readiness probe — checks MongoDB, R2, and Groq connectivity.',
+    method: 'GET',
+    path: '/health/ready',
+    auth: 'none',
+    responseExamples: [
+      { status: 200, label: 'All systems ready', body: { status: 'ok', mongo: true, r2: true, groq: true } },
+      { status: 503, label: 'Service unavailable', body: { status: 'error', mongo: false, groq: true } }
+    ]
+  },
+  {
+    id: 'ops-slo',
+    tag: 'Health',
+    title: 'SLO status',
+    description: 'Operational SLO dashboard.',
+    method: 'GET',
+    path: '/ops/slo',
+    auth: 'none',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { uptime: 99.98, errorBudgetRemaining: 0.85 } }
+    ]
+  },
+  // ─── Auth ─────────────────────────────────────────────
+  {
+    id: 'auth-webhook',
+    tag: 'Auth',
+    title: 'Clerk webhook receiver',
+    description: 'Inbound Clerk user lifecycle webhook (Svix-signed).',
+    method: 'POST',
+    path: '/auth/webhook',
+    auth: 'none',
+    responseExamples: [
+      { status: 200, label: 'Processed', body: { success: true, action: 'user.created' } }
+    ]
+  },
+  // ─── KYC → eID NFC ──────────────────────────────────────
+  {
+    id: 'kyc-eid-check',
+    tag: 'KYC',
+    title: 'eID NFC verification',
+    description: 'Cryptographic chip verification via submitted eID data.',
+    method: 'POST',
+    path: '/kyc/eid-check',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({
+      profileId: '672a9c2e3f1b2c4d5e6f7890',
+      countryCode: 'TR',
+      chipData: {
+        documentNumber: 'U12345678',
+        dateOfBirth: '19900101',
+        expiryDate: '20300101',
+        nationality: 'TUR',
+        surname: 'LOVELACE',
+        givenNames: 'ADA',
+        issuerAuthority: 'TR-IC-DIRECTORATE'
+      },
+      signatureAlg: 'SHA256WithRSA',
+      certificateIssuer: 'CN=TR-ID-Signing-CA',
+      certificateSubject: 'CN=TR-ID-CHIP-U12345678'
+    }, null, 2),
+    responseExamples: [
+      {
+        status: 200, label: 'Chip verified',
+        body: { status: 'approved', eidStatus: 'approved', profileId: '672...', data: { chipAuthenticated: true, sodSignatureValid: true, documentDataMatch: true, authenticityScore: 0.97 } }
+      },
+      {
+        status: 400, label: 'Chip auth failed',
+        body: { status: 'failed', errors: [{ code: 7001, textCode: 'EID_CHIP_AUTH_FAILED', message: 'eID chip could not be cryptographically authenticated.' }] }
+      }
+    ]
+  },
+  // ─── Integrator API ─────────────────────────────────────
+  {
+    id: 'kyc-create-profile',
+    tag: 'Integrator',
+    title: 'Create KYC profile',
+    description: 'Create hosted capture session. API key only.',
+    method: 'POST',
+    path: '/kyc/profiles',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({
+      integrationExternalRef: 'order-12345',
+      countryCode: 'TR',
+      channel: 'mobile',
+      returnUrl: 'https://yourapp.com/kyc/callback',
+      state: 'csrf-token-abc',
+      ttlSeconds: 3600
+    }, null, 2),
+    responseExamples: [
+      {
+        status: 201, label: 'Created',
+        body: { profileId: '672...', redirectUrl: 'https://armith-backend-live.onrender.com/m/start?t=eyJ...', expiresAt: '2026-06-01T13:00:00Z' }
+      }
+    ]
+  },
+  {
+    id: 'kyc-hosted-sessions',
+    tag: 'Integrator',
+    title: 'One-shot hosted session',
+    description: 'Quick hosted web session. API key only.',
+    method: 'POST',
+    path: '/kyc/hosted-sessions',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({
+      integrationExternalRef: 'session-abc',
+      countryCode: 'TR',
+      returnUrl: 'https://yourapp.com/kyc/callback',
+      state: 'csrf-abc'
+    }, null, 2),
+    responseExamples: [
+      { status: 201, label: 'Created', body: { profileId: '672...', redirectUrl: 'https://.../w/start?t=...' } }
+    ]
+  },
+  {
+    id: 'kyc-mint-session',
+    tag: 'Integrator',
+    title: 'Mint additional session',
+    description: 'Create a new capture session for an existing profile. API key only.',
+    method: 'POST',
+    path: '/kyc/profiles/:profileId/sessions',
+    auth: 'apiKeyOrClerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890', description: 'Existing profile ID' }],
+    body: JSON.stringify({ channel: 'web', returnUrl: 'https://yourapp.com/kyc/callback', state: 'new-state', ttlSeconds: 1800 }, null, 2),
+    responseExamples: [
+      { status: 201, label: 'Created', body: { sessionId: 'sess_abc', redirectUrl: 'https://...', expiresAt: '...' } }
+    ]
+  },
+  {
+    id: 'kyc-sessions-complete',
+    tag: 'Integrator',
+    title: 'Complete session',
+    description: 'Exchange result code for verification result. API key only.',
+    method: 'POST',
+    path: '/kyc/sessions/complete',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({ code: 'abc123def456', state: 'csrf-token-abc' }, null, 2),
+    responseExamples: [
+      {
+        status: 200, label: 'Approved',
+        body: { status: 'APPROVED', profileId: '672...', idVerification: { status: 'APPROVED' }, selfieVerification: { status: 'APPROVED' } }
+      },
+      { status: 400, label: 'Invalid code', body: { error: 'Invalid or expired result code' } }
+    ]
+  },
+  // ─── KYB ────────────────────────────────────────────────
+  {
+    id: 'kyb-list',
+    tag: 'KYB',
+    title: 'List KYB profiles',
+    description: 'List business verification profiles. API key.',
+    method: 'GET',
+    path: '/kyb/profiles',
+    auth: 'apiKeyOrClerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { profiles: [{ id: '672...', legalName: 'Acme Corp', status: 'PENDING', jurisdiction: 'GB' }] } }
+    ]
+  },
+  {
+    id: 'kyb-create',
+    tag: 'KYB',
+    title: 'Create KYB profile',
+    description: 'Create a business entity verification profile. API key.',
+    method: 'POST',
+    path: '/kyb/profiles',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({ legalName: 'Acme Corp Ltd.', registrationNumber: '1234567890', jurisdiction: 'GB', relatedPersonProfileIds: ['672...'], metadata: { industry: 'fintech' } }, null, 2),
+    responseExamples: [
+      { status: 201, label: 'Created', body: { id: '672...', legalName: 'Acme Corp Ltd.', status: 'PENDING' } }
+    ]
+  },
+  {
+    id: 'kyb-get',
+    tag: 'KYB',
+    title: 'Get KYB profile',
+    description: 'Get single business verification profile. API key.',
+    method: 'GET',
+    path: '/kyb/profiles/:id',
+    auth: 'apiKeyOrClerk',
+    pathParams: [{ name: 'id', example: '672a9c2e3f1b2c4d5e6f7891' }],
+    responseExamples: [
+      { status: 200, label: 'OK', body: { id: '672...', legalName: 'Acme Corp', status: 'PENDING' } }
+    ]
+  },
+  // ─── Admin ──────────────────────────────────────────────
+  {
+    id: 'admin-verification-detail',
+    tag: 'Admin',
+    title: 'Verification detail',
+    description: 'Full verification payload with checkpoints, images, thresholds.',
+    method: 'GET',
+    path: '/admin/verifications/:profileId',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'OK', body: { id: '672...', status: 'APPROVED', country: 'TR', progress: { isFullyVerified: true } } }
+    ]
+  },
+  {
+    id: 'admin-verification-events',
+    tag: 'Admin',
+    title: 'Verification events',
+    description: 'Timeline of lifecycle events for a profile.',
+    method: 'GET',
+    path: '/admin/verifications/:profileId/events',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'OK', body: { events: [{ type: 'id_verification_completed', createdAt: '2026-06-01T10:00:00Z' }], pagination: { page: 1 } } }
+    ]
+  },
+  {
+    id: 'admin-verification-delete',
+    tag: 'Admin',
+    title: 'Delete verification',
+    description: 'Delete profile and all related artifacts.',
+    method: 'DELETE',
+    path: '/admin/verifications/:profileId',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'Deleted', body: { success: true, deletedProfile: true, deletedObjects: 5 } }
+    ]
+  },
+  {
+    id: 'admin-account-usage',
+    tag: 'Admin',
+    title: 'Account usage',
+    description: 'Plan-level usage and limits.',
+    method: 'GET',
+    path: '/admin/account/usage',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { planTier: 'growth', monthlyVerificationLimit: 500, currentPeriodCount: 342, remaining: 158 } }
+    ]
+  },
+  {
+    id: 'admin-analytics',
+    tag: 'Admin',
+    title: 'Analytics',
+    description: 'Funnel, status breakdown, webhook delivery stats.',
+    method: 'GET',
+    path: '/admin/analytics',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { statusBreakdown: { APPROVED: 980, REJECTED: 180 }, funnel: { totalProfiles: 1250, approved: 980 } } }
+    ]
+  },
+  {
+    id: 'admin-errors-summary',
+    tag: 'Admin',
+    title: 'Error summary',
+    description: 'Top error fingerprints across profiles.',
+    method: 'GET',
+    path: '/admin/errors/summary',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { errors: [{ textCode: 'BLURRY_IMAGE', count: 85 }] } }
+    ]
+  },
+  {
+    id: 'admin-manual-review-enqueue',
+    tag: 'Admin',
+    title: 'Enqueue manual review',
+    description: 'Enqueue PENDING profile for manual review.',
+    method: 'POST',
+    path: '/admin/manual-reviews/:profileId/enqueue',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    body: JSON.stringify({ assigneeLabel: 'reviewer@example.com', slaDeadlineMinutes: 240 }, null, 2),
+    responseExamples: [
+      { status: 200, label: 'Enqueued', body: { success: true, profileId: '672...', status: 'UNDER_REVIEW' } }
+    ]
+  },
+  {
+    id: 'admin-manual-review-resolve',
+    tag: 'Admin',
+    title: 'Resolve manual review',
+    description: 'Resolve a manual review with APPROVED or REJECTED decision.',
+    method: 'POST',
+    path: '/admin/manual-reviews/:profileId/resolve',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    body: JSON.stringify({ decision: 'APPROVED', note: 'Document verified manually' }, null, 2),
+    responseExamples: [
+      { status: 200, label: 'Resolved', body: { success: true, profileId: '672...', status: 'APPROVED' } }
+    ]
+  },
+  {
+    id: 'admin-settings-history',
+    tag: 'Admin',
+    title: 'Settings revision history',
+    description: 'Recent configuration revision snapshots.',
+    method: 'GET',
+    path: '/admin/settings/history',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { revisions: [{ version: 3, changeSummary: 'Updated match threshold', createdAt: '...' }] } }
+    ]
+  },
+  {
+    id: 'admin-audit-log',
+    tag: 'Admin',
+    title: 'Admin audit log',
+    description: 'Cursor-paginated admin activity events.',
+    method: 'GET',
+    path: '/admin/audit-log',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { events: [{ action: 'settings.update', actorClerkId: 'user_abc', createdAt: '...' }], cursor: 'abc' } }
+    ]
+  },
+  {
+    id: 'admin-dsr-export',
+    tag: 'Admin',
+    title: 'Data subject export',
+    description: 'Export all profile data for GDPR/DSR compliance.',
+    method: 'GET',
+    path: '/admin/data-subject/:profileId/export',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'OK', body: { profileId: '672...', exportedAt: '...', profile: { fullName: 'Ada Lovelace', identityNumber: '••••' } } }
+    ]
+  },
+  {
+    id: 'admin-dsr-delete',
+    tag: 'Admin',
+    title: 'Data subject deletion',
+    description: 'Anonymize/delete profile data for GDPR.',
+    method: 'DELETE',
+    path: '/admin/data-subject/:profileId',
+    auth: 'clerk',
+    pathParams: [{ name: 'profileId', example: '672a9c2e3f1b2c4d5e6f7890' }],
+    responseExamples: [
+      { status: 200, label: 'Anonymized', body: { success: true, action: 'anonymized', profileId: '672...' } }
+    ]
+  },
+  {
+    id: 'admin-workflows-list',
+    tag: 'Admin',
+    title: 'List workflows',
+    description: 'List verification workflows for tenant.',
+    method: 'GET',
+    path: '/admin/workflows',
+    auth: 'clerk',
+    responseExamples: [
+      { status: 200, label: 'OK', body: { workflows: [{ workflowId: 'default', name: 'Default Workflow', steps: [{ type: 'id', required: true }] }] } }
+    ]
+  },
+  {
+    id: 'admin-workflows-upsert',
+    tag: 'Admin',
+    title: 'Create/update workflow',
+    description: 'Upsert a verification workflow by workflowId.',
+    method: 'PUT',
+    path: '/admin/workflows',
+    auth: 'clerk',
+    body: JSON.stringify({ workflowId: 'high-security', name: 'High Security', steps: [{ id: 'id-1', type: 'id', required: true }, { id: 'selfie-1', type: 'selfie', required: true }], isDefault: false }, null, 2),
+    responseExamples: [
+      { status: 200, label: 'Upserted', body: { success: true, workflowId: 'high-security', isDefault: false } }
+    ]
+  },
+  {
+    id: 'admin-webhook-retry-delivery',
+    tag: 'Webhooks',
+    title: 'Retry webhook delivery',
+    description: 'Retry a specific failed webhook delivery.',
+    method: 'POST',
+    path: '/admin/webhook-deliveries/:deliveryId/retry',
+    auth: 'clerk',
+    pathParams: [{ name: 'deliveryId', example: 'del_abc123' }],
+    responseExamples: [
+      { status: 200, label: 'Retried', body: { success: true, deliveryId: 'del_abc123', status: 'delivered' } }
+    ]
+  },
+  {
+    id: 'admin-webhook-test',
+    tag: 'Webhooks',
+    title: 'Send test webhook',
+    description: 'Send a test payload to a webhook endpoint.',
+    method: 'POST',
+    path: '/admin/webhooks/:id/test',
+    auth: 'clerk',
+    pathParams: [{ name: 'id', example: '682a....wh01' }],
+    responseExamples: [
+      { status: 200, label: 'Sent', body: { success: true, deliveryId: 'del_test_001' } }
+    ]
+  },
+  {
+    id: 'admin-webhook-rotate-key',
+    tag: 'Webhooks',
+    title: 'Rotate webhook signing key',
+    description: 'Rotate signing key for a webhook endpoint.',
+    method: 'POST',
+    path: '/admin/webhooks/:id/rotate-key',
+    auth: 'clerk',
+    pathParams: [{ name: 'id', example: '682a....wh01' }],
+    responseExamples: [
+      { status: 200, label: 'Rotated', body: { webhook: { id: '682a....wh01' }, rawKey: '64-char-hex-shown-once' } }
     ]
   }
 ];

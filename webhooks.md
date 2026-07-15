@@ -76,7 +76,14 @@ Retries: configurable (default 3 attempts, exponential backoff). Logged in `Webh
 
 **Queued:** `profileId`, `sessionId`, `status` (typically `UNDER_REVIEW`), `correlationId`
 
-**Resolved:** above + `decision` (`APPROVED` | `REJECTED`)
+**Resolved:** above + `decision` (`APPROVED` | `REJECTED`) + `reviewerNote` (if provided)
+
+### Outcome Semantics
+
+| Value | Meaning |
+|-------|---------|
+| `FINAL` | Terminal — no further automatic retry expected; profile status is final |
+| `RETRY_SUGGESTED` | Non-terminal — user may retry upload flow; profile can be re-attempted |
 
 ## Optional `data` Fields (Per-Webhook Allowlist)
 
@@ -158,8 +165,70 @@ where `plaintextSecret` is `integrationWebhookSecret` on `KycConfiguration`.
 
 **Migrate** by creating a webhook in Integrations → Webhooks.
 
-::: warning Test sink caveat
-`POST /webhooks/test` (debug, `WEBHOOK_TEST_ENABLED=1`) verifies with **plaintext secret**, not the derived hash model. Use only for local debugging.
+## Webhook Delivery Log
+
+Monitor delivery status via API:
+
+### List deliveries
+
+```bash
+curl -X GET "https://armith-backend-live.onrender.com/admin/webhook-deliveries?failedOnly=true&webhookId=<WEBHOOK_ID>" \
+  -H "Authorization: Bearer <CLERK_JWT>"
+```
+
+Query filters:
+
+| Param | Description |
+|-------|-------------|
+| `failedOnly` | Show only failed deliveries |
+| `deadLetter` | Show only dead-lettered deliveries |
+| `webhookId` | Filter by webhook endpoint |
+| `profileId` | Filter by profile |
+
+### Delivery status values
+
+| Status | Meaning |
+|--------|---------|
+| `pending` | Queued for delivery |
+| `delivered` | Successfully delivered (HTTP 2xx) |
+| `failed` | Failed after all retry attempts |
+| `dead_letter` | Moved to dead letter queue after max retries |
+
+### Retry a failed delivery
+
+```bash
+curl -X POST "https://armith-backend-live.onrender.com/admin/webhook-deliveries/<DELIVERY_ID>/retry" \
+  -H "Authorization: Bearer <CLERK_JWT>"
+```
+
+### Replay terminal webhook
+
+```bash
+curl -X POST "https://armith-backend-live.onrender.com/admin/webhooks/replay/<PROFILE_ID>?webhookId=<WEBHOOK_ID>&useStoredDelivery=true" \
+  -H "Authorization: Bearer <CLERK_JWT>"
+```
+
+Parameters:
+
+| Param | Description |
+|-------|-------------|
+| `webhookId` | Target webhook (omit for all active webhooks) |
+| `useStoredDelivery` | Replay the original stored payload vs generating a fresh one |
+
+## Webhook Test Sink
+
+A debug endpoint for testing webhook signatures:
+
+```bash
+curl -X POST "https://armith-backend-live.onrender.com/webhooks/test" \
+  -H "Content-Type: application/json" \
+  -H "X-Webhook-Timestamp: <timestamp>" \
+  -H "X-Webhook-Signature: sha256=<signature>" \
+  -d '{"test": true}'
+```
+
+::: danger
+`WEBHOOK_TEST_ENABLED=1` must be set on the backend. **Never enable in production.**
 :::
 
 ## Webhook Management APIs
@@ -173,15 +242,17 @@ where `plaintextSecret` is `integrationWebhookSecret` on `KycConfiguration`.
 | `PATCH` | `/admin/webhooks/:id` | Update name, url, events, dataFields, isActive |
 | `DELETE` | `/admin/webhooks/:id` | Delete |
 | `POST` | `/admin/webhooks/:id/rotate-key` | Rotate signing key |
-| `GET` | `/admin/webhook-deliveries` | Delivery log (`?failedOnly`, `?webhookId`) |
-| `POST` | `/admin/webhooks/replay/:profileId` | Replay terminal webhook (`?webhookId=`, `?useStoredDelivery=true`) |
+| `POST` | `/admin/webhooks/:id/test` | Send a test webhook payload |
+| `GET` | `/admin/webhook-deliveries` | Delivery log |
+| `POST` | `/admin/webhook-deliveries/:deliveryId/retry` | Retry failed delivery |
+| `POST` | `/admin/webhooks/replay/:profileId` | Replay terminal webhook |
 
 All require Clerk dashboard authentication.
 
 ## Create Webhook Example
 
 ```bash
-curl -X POST "$BASE_URL/admin/webhooks" \
+curl -X POST "https://armith-backend-live.onrender.com/admin/webhooks" \
   -H "Authorization: Bearer $CLERK_JWT" \
   -H "Content-Type: application/json" \
   -d '{

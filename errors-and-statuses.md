@@ -4,7 +4,7 @@ How to interpret KYC API responses, error codes, and integration behavior.
 
 ## Status Values
 
-### Checkpoint endpoints (`POST /kyc/id-check`, `POST /kyc/selfie-check`)
+### Checkpoint endpoints (`POST /kyc/id-check`, `POST /kyc/selfie-check`, `POST /kyc/eid-check`)
 
 Return **lowercase** checkpoint/overall status in the JSON body:
 
@@ -27,7 +27,19 @@ Returns **uppercase** persisted profile status:
 | `FAILED` | System error |
 | `UNDER_REVIEW` | Manual review queue |
 
-Also includes `session.lifecycle` (`awaiting_id`, `awaiting_selfie`, `approved`, `under_review`, …) and per-checkpoint detail objects.
+Also includes `session.lifecycle`:
+
+| Lifecycle | Meaning |
+|-----------|---------|
+| `awaiting_id` | Waiting for ID card verification |
+| `awaiting_selfie` | ID passed; waiting for selfie |
+| `awaiting_screening` | Verification done; screening in progress |
+| `approved` | All checks passed |
+| `rejected` | Terminal rejection |
+| `failed` | System failure |
+| `under_review` | In manual review queue |
+
+and per-checkpoint detail objects (ID, selfie, eID NFC, screening).
 
 ## Error Object Shape
 
@@ -59,6 +71,8 @@ Some middleware responses use `{ "error": "Authentication required" }` without t
 | `4xxx` | Selfie / liveness / match | `LOW_MATCH_CONFIDENCE`, `NO_FACE_DETECTED`, `SPOOFING_DETECTED` |
 | `5xxx` | System / runtime | `GROQ_API_ERROR`, `INTERNAL_ERROR`, `INVALID_IMAGE_URL` |
 | `6xxx` | Flow / preconditions | `PROFILE_ID_REQUIRED`, `UNSUPPORTED_COUNTRY`, `IMAGE_TOO_LARGE` |
+| `7xxx` | eID NFC verification | `EID_CHIP_AUTH_FAILED`, `EID_SOD_INVALID`, `EID_DATA_MISMATCH` |
+| `8xxx` | Screening / AML | `SANCTIONS_FLAGGED`, `PEP_FLAGGED`, `SCREENING_MISCONFIGURED` |
 
 ## High-Impact Error Codes
 
@@ -72,6 +86,13 @@ Some middleware responses use `{ "error": "Authentication required" }` without t
 | `PROFILE_ACCESS_DENIED` | Token/key cannot access profile | Check tenant scope |
 | `ACCOUNT_IP_FORBIDDEN` / `API_KEY_IP_FORBIDDEN` | IP not on allowlist | Update CIDR rules |
 | `IDENTITY_ALREADY_LINKED` | TC number bound to another user (HTTP 409) | Support workflow |
+| `EID_CHIP_AUTH_FAILED` | eID chip could not be cryptographically authenticated | Ask user to retry NFC tap |
+| `EID_SOD_INVALID` | eID SOD signature invalid | Document may be tampered |
+| `EID_DATA_MISMATCH` | eID chip data doesn't match visual document | Manual review recommended |
+| `SANCTIONS_FLAGGED` | Screening matched a sanctions list | Compliance review required |
+| `PEP_FLAGGED` | Screening identified a politically exposed person | Enhanced due diligence |
+| `SCREENING_MISCONFIGURED` | Screening provider not configured properly | Check adapter settings |
+| `CORS_FORBIDDEN` | Origin not allowed by CORS policy | Check `FRONTEND_URL` config |
 
 ## Idempotency Responses
 
@@ -113,7 +134,7 @@ Terminal webhooks include `outcomeSemantics`:
 ### On `5xx` / `failed`
 
 - Retry with exponential backoff
-- Use `Idempotency-Key` on `id-check` / `selfie-check`
+- Use `Idempotency-Key` on `id-check` / `selfie-check` / `eid-check`
 - Log `profileId`, `correlationId`, and error payload
 
 ### On `UNDER_REVIEW`
@@ -122,9 +143,23 @@ Terminal webhooks include `outcomeSemantics`:
 - Listen for `verification.manual_review_resolved` webhook
 - Or poll status until terminal
 
+### On `SANCTIONS_FLAGGED` / `PEP_FLAGGED`
+
+- Do not onboard the user automatically
+- Route to compliance team for manual review
+- Log full screening details for audit
+
+### On `IDENTITY_ALREADY_LINKED`
+
+- Check if the user already has an approved profile
+- Do not create duplicate profiles for the same national ID
+- Contact support for identity disputes
+
 ## UX Tips
 
 - Map `textCode` to localized user strings; keep raw codes in logs
 - Preserve `profileId` across your order/user records
 - Distinguish **rejected** (user fixable) from **failed** (system)
 - Treat capture sharpness errors separately from low LLM confidence — different remediation
+- For eID errors, guide users to retry NFC with proper positioning
+- For screening flags, never show details to the end-user — log for compliance team only
