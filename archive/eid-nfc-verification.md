@@ -2,6 +2,8 @@
 
 eID (electronic ID) cards contain an embedded cryptographic chip that can be read via NFC. Armith verifies the chip data against the visual document fields to provide an additional layer of security beyond optical character recognition.
 
+The caller must own the profile (`PROFILE_ACCESS_DENIED` if not). Country is taken from `countryCode` or the profile `country` field.
+
 ## When to Use
 
 eID NFC verification is recommended for:

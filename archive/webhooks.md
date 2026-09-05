@@ -42,7 +42,7 @@ Body is JSON. The server injects top-level `id` (delivery UUID) immediately befo
 
 Reject deliveries when `|now - timestamp| > 300` seconds (replay protection).
 
-Retries: configurable (default 3 attempts, exponential backoff). Logged in `WebhookDelivery` collection.
+Retries: configurable via `WEBHOOK_DELIVERY_MAX_ATTEMPTS` (default **5**, max 10). Logged in `WebhookDelivery` collection.
 
 ## Payload Shape (`apiVersion: 2026-05-06`)
 

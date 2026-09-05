@@ -82,6 +82,8 @@ Some middleware responses use `{ "error": "Authentication required" }` without t
 | `ADVERSARIAL_IMAGE_DETECTED` | Byte-level heuristics flagged upload | Reject; do not retry same bytes |
 | `NO_FACE_DETECTED` | Selfie preflight | Retake selfie with face centered |
 | `PLAN_LIMIT_REACHED` | Monthly quota exceeded (HTTP 429) | Upgrade plan or wait for reset |
+| `RESULT_CODE_NOT_READY` | Result code mint before terminal status (HTTP 409) | Wait until APPROVED/REJECTED/FAILED/UNDER_REVIEW |
+| `RESULT_CODE_STORE_UNAVAILABLE` | Redis required for result codes (HTTP 503) | Retry; production requires Redis |
 | `PROFILE_ID_REQUIRED` | Selfie called without profile when both steps required | Run `id-check` first |
 | `PROFILE_ACCESS_DENIED` | Token/key cannot access profile | Check tenant scope |
 | `ACCOUNT_IP_FORBIDDEN` / `API_KEY_IP_FORBIDDEN` | IP not on allowlist | Update CIDR rules |

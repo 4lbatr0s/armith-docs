@@ -113,7 +113,7 @@ Test your error handling:
 
 ```bash
 # Blurry image rejection
-curl -X POST "..." -d '{"sandboxScenario": "rejected_blurb", ...}'
+curl -X POST "..." -d '{"sandboxScenario": "rejected_blur", ...}'
 # → 400 with BLURRY_IMAGE
 
 # Tampering detection
@@ -122,7 +122,7 @@ curl -X POST "..." -d '{"sandboxScenario": "rejected_tampering", ...}'
 
 # Manual review escalation
 curl -X POST "..." -d '{"sandboxScenario": "under_review", ...}'
-# → 200 with status "pending" → profile status "UNDER_REVIEW"
+# → 200 with status "under_review" → profile status "UNDER_REVIEW"
 ```
 
 ## Best Practices

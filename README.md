@@ -1,6 +1,6 @@
 # Armith Docs
 
-Product documentation for the Armith API-only KYC platform.
+Product documentation for the Armith API-first KYC platform.
 
 **Live site:** https://armith-docs-standalone.onrender.com
 
@@ -20,23 +20,20 @@ npm run docs:preview
 
 ## Environment
 
-Copy `.env.example` to `.env` and set `VITE_APP_URL` (dashboard link on home page).
+Copy `.env.example` to `.env`. `VITE_APP_URL` is the dashboard link on the home page. Optional `VITE_BACKEND_URL` sets the REST playground default (otherwise sandbox).
 
 ## Documentation structure
 
-| Page | Topic |
-|------|--------|
-| `index.md` | Overview and reading order |
-| `getting-started.md` | Prerequisites and checklist |
-| `authentication.md` | API keys, Clerk, capture sessions, idempotency |
-| `integrations-dashboard.md` | Webhooks + API keys UI |
-| `kyc-flow-overview.md` | End-to-end pipeline |
-| `kyc-api-flow.md` | Step-by-step curl guide |
-| `verification-and-preflight.md` | Blur, adversarial checks, thresholds |
-| `webhooks.md` | Outbound events and signing |
-| `errors-and-statuses.md` | Status codes and error families |
-| `admin-and-config-apis.md` | Admin + `/config` reference |
-| `api-reference.md` | REST playground |
+| Section | Pages |
+|---------|-------|
+| Start Here | `index.md`, `quickstart.md`, `concepts/` (how-it-works, integration-patterns, terminology) |
+| Guides | `guides/rest-api/`, `guides/hosted-capture/`, `guides/mobile-sdk/`, `guides/webhooks/` |
+| Reference | `reference/` (authentication, status-codes, configuration, sandbox-testing, limits-and-quotas), `api-reference.md` (REST playground) |
+| Advanced | `advanced/` (threshold-tuning, custom-workflows, async-verification, screening, eid-nfc, kyb-verification, manual-review, data-subject-rights) |
+| Troubleshooting | `troubleshooting/` (common-errors, faq, debugging-guide) |
+| Archive | `archive/` (superseded pages, kept for history — not in sidebar) |
 
-OpenAPI: `public/openapi.yaml`  
+OpenAPI: `public/openapi.yaml`
 Playground catalog: `playground-endpoints.js`
+
+Related application repo: **armith**.

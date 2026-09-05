@@ -72,7 +72,7 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/profiles" \
 ```json
 {
   "profileId": "672a9c2e3f1b2c4d5e6f7890",
-  "redirectUrl": "https://armith-backend-live.onrender.com/m/start?t=eyJhbGciOiJIUzI1NiIs…",
+  "redirectUrl": "https://armith.onrender.com/m/start?t=eyJhbGciOiJIUzI1NiIs…",
   "expiresAt": "2026-06-01T13:00:00Z"
 }
 ```

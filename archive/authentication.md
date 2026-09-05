@@ -70,8 +70,8 @@ Two token modes exist:
 
 | Mode | Scope | Usage |
 |------|-------|-------|
-| `kycCaptureWrite` | Full read/write — upload, verify, check | Hosted capture flows |
-| `captureSession` | Read-only — status polling | Embedded status widgets |
+| `kycCaptureWrite` | Full read/write — upload, verify, check | Hosted capture (`/m/start`, `/w/start`) and the RN SDK |
+| `captureSession` | **Legacy** read-only — status polling | Do not add new callers; prefer a write-scoped session or API key |
 
 ## Endpoint Access Rules
 

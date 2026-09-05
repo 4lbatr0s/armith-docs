@@ -139,11 +139,7 @@ Full KYC + AML screening, with optional manual review for escalated cases.
 
 ## Workflow vs Verification Steps Setting
 
-The `verificationSteps` settings (`requireIdCard`, `requireSelfie`, `requireAml`) on the KYC configuration are a simplified version of workflows:
-
-- If **no workflow** is defined → the legacy `verificationSteps` settings determine what runs
-- If a **workflow exists** → the workflow fully controls the verification pipeline
-- Workflows **supersede** the flat `verificationSteps` configuration
+Runtime verification still uses tenant **`verificationSteps`** (`requireIdCard`, `requireSelfie`, `requireAml`). The workflows API stores an ordered admin overlay (`GET`/`PUT /admin/workflows`). If a workflow exists it should be treated as documentation of intended order; **`verificationSteps` remains the flags the pipeline actually evaluates**. Do not configure the two in conflict.
 
 ## Best Practices
 

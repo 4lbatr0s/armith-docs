@@ -129,8 +129,8 @@ export const PLAYGROUND_ENDPOINTS = [
         body: {
           configured: true,
           provider: 'Groq',
-          reasoningModel: 'llama-4-maverick-17b-128e-instruct-fast',
-          visionModel: 'moonshotai/kimi-k2-thinking-turbo-preview'
+          reasoningModel: 'meta-llama/llama-4-scout-17b-16e-instruct',
+          visionModel: 'meta-llama/llama-4-scout-17b-16e-instruct'
         }
       },
       {
@@ -960,7 +960,7 @@ export const PLAYGROUND_ENDPOINTS = [
     responseExamples: [
       {
         status: 201, label: 'Created',
-        body: { profileId: '672...', redirectUrl: 'https://armith-backend-live.onrender.com/m/start?t=eyJ...', expiresAt: '2026-06-01T13:00:00Z' }
+        body: { profileId: '672...', redirectUrl: 'https://armith.onrender.com/m/start?t=eyJ...', expiresAt: '2026-06-01T13:00:00Z' }
       }
     ]
   },

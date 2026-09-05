@@ -59,9 +59,9 @@ curl -X GET "https://armith-backend-live.onrender.com/admin/account/usage" \
 ```json
 {
   "planTier": "growth",
-  "monthlyVerificationLimit": 500,
+  "monthlyVerificationLimit": null,
   "currentPeriodCount": 342,
-  "remaining": 158,
+  "remaining": null,
   "burstLimit": 100,
   "activeApiKeys": 3,
   "features": {
@@ -72,7 +72,7 @@ curl -X GET "https://armith-backend-live.onrender.com/admin/account/usage" \
 }
 ```
 
-## Detailed Analytics
+Free tier is capped at **20** verifications/month. Growth and Enterprise have **no app-enforced monthly cap** (`monthlyVerificationLimit: null`) unless you set `limitsOverride.monthlyVerificationLimit` on the user.
 
 For deeper operational insights:
 

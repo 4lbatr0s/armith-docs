@@ -24,6 +24,8 @@ tags:
   - name: Admin
   - name: Webhooks
   - name: Config
+  - name: Integrator
+  - name: KYB
 components:
   securitySchemes:
     bearerAuth:
@@ -740,3 +742,133 @@ paths:
       responses:
         '200':
           description: Preset applied
+  /kyc/eid-check:
+    post:
+      tags: [KYC]
+      summary: eID NFC chip verification (caller must own the profile)
+      security:
+        - apiKeyAuth: []
+        - captureSession: []
+      responses:
+        '200':
+          description: Chip validation result
+        '403':
+          description: Profile access denied
+  /kyc/profiles:
+    post:
+      tags: [Integrator]
+      summary: Create integrator profile and mint hosted redirect URL
+      security:
+        - apiKeyAuth: []
+      responses:
+        '201':
+          description: Created
+  /kyc/hosted-sessions:
+    post:
+      tags: [Integrator]
+      summary: One-shot hosted web capture session
+      security:
+        - apiKeyAuth: []
+      responses:
+        '201':
+          description: Created
+  /kyc/profiles/{profileId}/sessions:
+    post:
+      tags: [Integrator]
+      summary: Mint an additional capture session for an existing profile
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session minted
+  /kyc/sessions/complete:
+    post:
+      tags: [Integrator]
+      summary: Exchange a one-time result code
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Profile status
+  /kyc/sessions/result-code:
+    post:
+      tags: [Integrator]
+      summary: Mint a result code (write session; profile must be terminal)
+      security:
+        - captureSession: []
+      responses:
+        '200':
+          description: Code issued
+        '409':
+          description: Verification not terminal
+  /kyb/profiles:
+    get:
+      tags: [KYB]
+      summary: List KYB entity records (manual CRUD)
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: List
+    post:
+      tags: [KYB]
+      summary: Create a KYB entity record
+      security:
+        - apiKeyAuth: []
+      responses:
+        '201':
+          description: Created
+  /admin/workflows:
+    get:
+      tags: [Admin]
+      summary: List verification workflow overlays
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Workflows
+    put:
+      tags: [Admin]
+      summary: Upsert a workflow overlay
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Saved
+  /admin/data-subject/{profileId}:
+    get:
+      tags: [Admin]
+      summary: Export data-subject payload
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Export
+    delete:
+      tags: [Admin]
+      summary: Delete data-subject records
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Deleted
+        '409':
+          description: Legal hold

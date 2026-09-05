@@ -1,6 +1,8 @@
 # KYB Verification (Know Your Business)
 
-Armith supports **Know Your Business (KYB)** entity verification — verifying legal entities, their registration details, and their relationship to individual KYC profiles (directors, beneficial owners, shareholders).
+::: warning Early / manual only
+KYB today is **thin CRUD**: create and list legal-entity records (name, registration number, jurisdiction). There is **no automated company-document verification**. Person KYC profiles stay independent of the entity record.
+:::
 
 ## Overview
 

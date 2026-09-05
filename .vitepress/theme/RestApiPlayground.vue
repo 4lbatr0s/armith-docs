@@ -2,7 +2,7 @@
 import { ref, computed, watch } from 'vue';
 import { PLAYGROUND_ENDPOINTS, PLAYGROUND_TAG_ORDER } from '../../playground-endpoints.js';
 
-const baseUrl = ref('https://armith-backend-live.onrender.com');
+const baseUrl = ref(import.meta.env.VITE_BACKEND_URL || 'https://armith-backend-live.onrender.com');
 const apiKey = ref('');
 const bearerToken = ref('');
 const selectedId = ref(PLAYGROUND_ENDPOINTS[0].id);

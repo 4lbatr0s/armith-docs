@@ -1,8 +1,6 @@
 # Armith KYC API Documentation
 
-Armith is an **API-first** identity verification platform with a dashboard for operations, settings, API keys, webhooks, and analytics.
-
-Built for fintech, regtech, and digital identity teams who need a multi-country KYC solution with AI-powered verification, deterministic preflight gates, and flexible integration options — direct REST API, hosted capture pages, or mobile SDK.
+Armith is an **API-first** identity verification platform: verify ID documents + selfies via REST API, hosted capture pages, or React Native SDK — with webhooks for real-time results.
 
 <script setup>
 const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
@@ -12,105 +10,51 @@ const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
   Open dashboard
 </a>
 
+## Start Here (5 minutes)
+
+**New?** Go to [Quickstart →](/quickstart) — pick REST API, Hosted Capture, or Mobile SDK and get verified in ~5 minutes.
+
+**Choosing?** [Choose Your Path →](/concepts/integration-patterns) — decision flowchart for your stack.
+
+**Curious how it works?** [How It Works →](/concepts/how-it-works) — preflight → LLM → server decision, in one diagram.
+
 ## Integration Options
 
-| Option | Best for | Docs |
-|--------|----------|------|
-| **REST API** | Backend/server-side integrations (any language) | [Step-by-Step API Flow](/kyc-api-flow) |
-| **Hosted Capture** | Web/mobile apps — Armith handles the upload UI via redirect | [Integrator Hosted Flow](/integrator-hosted-flow) |
-| **Mobile SDK** | React Native apps — native ID capture + selfie camera UI | [Mobile SDK](/mobile-sdk) |
+| Option | Best for | Guide |
+|--------|----------|-------|
+| **REST API** | Custom UI, any backend language | [Get Started →](/guides/rest-api/get-started) |
+| **Hosted Capture** | Web apps, fastest integration (redirect) | [Get Started →](/guides/hosted-capture/get-started) |
+| **Mobile SDK** | React Native, native camera | [Get Started →](/guides/mobile-sdk/get-started) |
+| **Webhooks** | Real-time results (all paths) | [Get Started →](/guides/webhooks/get-started) |
 
-## What This Documentation Covers
+## Base URLs
 
-1. Create and manage **API keys** (`Integrations → API Keys`)
-2. Authenticate KYC requests (`x-api-key`, Clerk session, or capture session token)
-3. Complete the direct REST API flow: upload → ID check → selfie check → status
-4. Integrate via **hosted capture pages** with redirect-based flows
-5. Integrate via **React Native SDK** for native mobile apps
-6. Configure **outbound webhooks** with signing keys and optional payload fields
-7. Understand **preflight gates** (blur, adversarial image checks) and verification outcomes
-8. Use the live **REST API Playground** to inspect requests and responses
-9. Manage **configurations, thresholds, and manual review** from the dashboard
+- **Sandbox / shared dev:** `https://armith-backend-live.onrender.com` (use `ak_test_` keys)
+- **Production:** `https://api.armith.com` or your tenant domain (use `ak_live_` keys)
+- **Dashboard:** `https://armith.onrender.com`
 
-## Product Capabilities
+Local dev: backend `http://localhost:3001`, dashboard `http://localhost:3000`.
 
-### Current
+## Capabilities
 
-- REST API verification (ID + selfie + eID NFC)
-- AI-powered document extraction and face matching via Groq LLM
-- Deterministic preflight (blur, adversarial checks) before LLM
-- Hosted capture pages for web and mobile channels
-- React Native SDK for native mobile capture
-- Outbound webhooks with HMAC signing + multi-webhook fan-out
-- KYB (Know Your Business) entity verification
-- AML/sanctions/PEP screening
-- Async verification with BullMQ queue
-- Sandbox testing with deterministic scenarios
-- Manual review queue with auto-escalation and assignment
-- Configurable verification workflows
-- Admin analytics, audit log, and data subject rights (GDPR)
-- Multi-tenant dashboard with role-based access
+- ID + selfie + eID NFC verification (Groq vision + deterministic server rules)
+- Preflight quality gates (blur, adversarial, face) before any LLM call
+- Hosted capture pages (`/w/start`, `/m/start`) + React Native SDK
+- Webhooks with HMAC signing + multi-endpoint fan-out
+- KYB entity records (manual), AML/sanctions/PEP screening
+- Async (BullMQ) processing, sandbox fixtures, manual review queue
+- Configurable thresholds + presets (`strict` / `balanced` / `lenient`), GDPR tooling
 
-### On the roadmap
+Roadmap: official web SDK widget, more country validators, enhanced liveness, passport/residence-permit detection.
 
-- Official web SDK (drop-in widget)
-- Additional country validators
-- Enhanced biometric liveness checks
-- Document type detection (passport, residence permit)
+## Reading Order
 
-## Base URL
-
-Use your assigned API base URL:
-
-- **Sandbox / shared dev:** `https://armith-backend-live.onrender.com`
-- **Production (when provisioned):** `https://api.armith.com`
-
-Ask Armith support for a dedicated tenant domain if your account uses one.
-
-**Dashboard (SPA):** `https://armith.onrender.com`
-
-## Supported KYC Flow Patterns
-
-### Pattern A — Direct REST API
-
-1. Sign in to the dashboard and create an API key under **Integrations → API Keys**
-2. (Optional) Register **outbound webhooks** under **Integrations → Webhooks**
-3. Request pre-signed upload URLs (`POST /kyc/upload-url`)
-4. Upload ID and selfie images directly to object storage (R2)
-5. Run ID verification (`POST /kyc/id-check`)
-6. Run selfie verification (`POST /kyc/selfie-check`) when required
-7. Poll session status (`GET /kyc/status/:profileId` or `GET /kyc/sessions/:id`)
-8. Receive terminal events on your webhook endpoint (or poll status)
-
-### Pattern B — Hosted Capture Pages
-
-1. Call `POST /kyc/profiles` with `returnUrl` and `state` from your backend
-2. Redirect end-user to the returned `redirectUrl`
-3. Armith handles ID upload, selfie capture, and verification
-4. User is redirected back to your `returnUrl` with the result
-5. Receive terminal events on your webhook endpoint
-
-### Pattern C — Mobile SDK
-
-1. Integrate `armith-kyc-react-native` into your React Native app
-2. Call `POST /kyc/profiles` from your backend to get a session
-3. Open the session URL in the SDK's capture flow
-4. Receive terminal events on your webhook endpoint
-
-## Recommended Reading Order
-
-1. [Getting Started](/getting-started) — pick your integration path
-2. [Authentication](/authentication) — API keys, sessions, idempotency
-3. [Integrations Dashboard](/integrations-dashboard) — webhooks, API keys, settings
-4. Flow Guide — choose one:
-   - [Step-by-Step API Flow](/kyc-api-flow) — direct REST
-   - [Integrator Hosted Flow](/integrator-hosted-flow) — capture pages
-   - [Mobile SDK](/mobile-sdk) — React Native
-5. [Verification & Preflight](/verification-and-preflight) — quality gates, thresholds
-6. [Outbound Webhooks](/webhooks) — event types, signing
-7. [Statuses and Errors](/errors-and-statuses) — error handling
-8. [Admin and Config APIs](/admin-and-config-apis) — operations
-9. [REST API Playground](/api-reference) — interactive testing
+1. [Quickstart](/quickstart) — 5-min tutorial for your path
+2. [How It Works](/concepts/how-it-works) — mental model
+3. Guide for your path: [REST](/guides/rest-api/get-started) · [Hosted](/guides/hosted-capture/get-started) · [Mobile](/guides/mobile-sdk/get-started)
+4. [Webhooks](/guides/webhooks/get-started) — real-time results
+5. [Authentication](/reference/authentication) · [Status Codes](/reference/status-codes) · [Sandbox](/reference/sandbox-testing)
+6. [Troubleshooting](/troubleshooting/common-errors) when something breaks; [Advanced](/advanced/threshold-tuning) only when tuning
 
 ## Environments
 
@@ -118,4 +62,4 @@ Ask Armith support for a dedicated tenant domain if your account uses one.
 |-------------|-------------|---------------|---------|
 | Local dev | `http://localhost:3001` | `http://localhost:3000` | Development |
 | Sandbox | `https://armith-backend-live.onrender.com` | `https://armith.onrender.com` | Integration testing |
-| Production | `https://api.armith.com` | — | Live traffic |
+| Production | `https://api.armith.com` | `https://armith.onrender.com` | Live traffic |
