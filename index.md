@@ -1,39 +1,74 @@
-# Armith KYC API Documentation
+---
+outline: [2, 3]
+---
 
-Armith is an **API-first** identity verification platform: verify ID documents + selfies via REST API, hosted capture pages, or React Native SDK — with webhooks for real-time results.
+<span class="armith-kicker">Identity verification API</span>
+
+# Armith KYC API
+
+Verify ID documents and selfies via **REST API**, **hosted capture pages**, or the **React Native SDK** — with webhooks for real-time results.
 
 <script setup>
 const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
 </script>
 
-<a :href="appUrl" target="_blank" rel="noopener noreferrer" class="armith-btn-primary">
-  Open dashboard
-</a>
+<p class="armith-cta-row">
+  <a href="/quickstart" class="armith-btn-primary">Start in 5 minutes</a>
+  <a :href="appUrl" target="_blank" rel="noopener noreferrer">Open the Armith dashboard</a>
+</p>
 
-## Start Here (5 minutes)
+<p class="armith-trust-line">
+  TLS in transit, tenant-isolated records, HMAC-signed webhooks, and
+  <a href="/advanced/data-subject-rights">GDPR data-subject tools</a>.
+  Security contact lives on the
+  <a :href="appUrl + '/trust'" target="_blank" rel="noopener noreferrer">Trust page</a>.
+</p>
 
-**New?** Go to [Quickstart →](/quickstart) — pick REST API, Hosted Capture, or Mobile SDK and get verified in ~5 minutes.
+## Choose your path
 
-**Choosing?** [Choose Your Path →](/concepts/integration-patterns) — decision flowchart for your stack.
-
-**Curious how it works?** [How It Works →](/concepts/how-it-works) — preflight → LLM → server decision, in one diagram.
-
-## Integration Options
-
-| Option | Best for | Guide |
-|--------|----------|-------|
-| **REST API** | Custom UI, any backend language | [Get Started →](/guides/rest-api/get-started) |
-| **Hosted Capture** | Web apps, fastest integration (redirect) | [Get Started →](/guides/hosted-capture/get-started) |
-| **Mobile SDK** | React Native, native camera | [Get Started →](/guides/mobile-sdk/get-started) |
-| **Webhooks** | Real-time results (all paths) | [Get Started →](/guides/webhooks/get-started) |
+<div class="armith-api-grid">
+  <a class="armith-api-card" href="/quickstart">
+    <span class="armith-api-card-title">⚡ Quickstart (5 min)</span>
+    <span class="armith-api-card-desc">Get verified fast — REST, hosted, or mobile in one page.</span>
+  </a>
+  <a class="armith-api-card" href="/guides/rest-api/get-started">
+    <span class="armith-api-card-title">🔌 REST API</span>
+    <span class="armith-api-card-desc">Custom upload UI, any backend language. Full control.</span>
+  </a>
+  <a class="armith-api-card" href="/guides/hosted-capture/get-started">
+    <span class="armith-api-card-title">🖥️ Hosted Capture</span>
+    <span class="armith-api-card-desc">Redirect flow — Armith hosts the ID + selfie UI.</span>
+  </a>
+  <a class="armith-api-card" href="/guides/mobile-sdk/get-started">
+    <span class="armith-api-card-title">📱 Mobile SDK</span>
+    <span class="armith-api-card-desc">Native in-app KYC for React Native.</span>
+  </a>
+  <a class="armith-api-card" href="/guides/webhooks/get-started">
+    <span class="armith-api-card-title">🔔 Webhooks</span>
+    <span class="armith-api-card-desc">Real-time results with HMAC-signed delivery.</span>
+  </a>
+  <a class="armith-api-card" href="/concepts/how-it-works">
+    <span class="armith-api-card-title">🧠 How it works</span>
+    <span class="armith-api-card-desc">Preflight → LLM → server decision, in one diagram.</span>
+  </a>
+</div>
 
 ## Base URLs
 
-- **Sandbox / shared dev:** `https://armith-backend-live.onrender.com` (use `ak_test_` keys)
-- **Production:** `https://api.armith.com` or your tenant domain (use `ak_live_` keys)
-- **Dashboard:** `https://armith.onrender.com`
+<div class="armith-api-hero">
+  <div>
+    <p class="armith-api-hero-title">Sandbox (testing)</p>
+    <code>https://armith-backend-live.onrender.com</code><br />
+    <span style="font-size: 0.8rem">Use <code>ak_test_</code> keys — free, deterministic.</span>
+  </div>
+  <div>
+    <p class="armith-api-hero-title">Production</p>
+    <code>https://api.armith.com</code><br />
+    <span style="font-size: 0.8rem">Use <code>ak_live_</code> keys — or your tenant domain.</span>
+  </div>
+</div>
 
-Local dev: backend `http://localhost:3001`, dashboard `http://localhost:3000`.
+**Dashboard:** `https://armith.onrender.com` · Local dev: backend `http://localhost:3001`, dashboard `http://localhost:3000`.
 
 ## Capabilities
 
@@ -47,7 +82,7 @@ Local dev: backend `http://localhost:3001`, dashboard `http://localhost:3000`.
 
 Roadmap: official web SDK widget, more country validators, enhanced liveness, passport/residence-permit detection.
 
-## Reading Order
+## Suggested reading order
 
 1. [Quickstart](/quickstart) — 5-min tutorial for your path
 2. [How It Works](/concepts/how-it-works) — mental model
@@ -55,11 +90,3 @@ Roadmap: official web SDK widget, more country validators, enhanced liveness, pa
 4. [Webhooks](/guides/webhooks/get-started) — real-time results
 5. [Authentication](/reference/authentication) · [Status Codes](/reference/status-codes) · [Sandbox](/reference/sandbox-testing)
 6. [Troubleshooting](/troubleshooting/common-errors) when something breaks; [Advanced](/advanced/threshold-tuning) only when tuning
-
-## Environments
-
-| Environment | Backend URL | Dashboard URL | Purpose |
-|-------------|-------------|---------------|---------|
-| Local dev | `http://localhost:3001` | `http://localhost:3000` | Development |
-| Sandbox | `https://armith-backend-live.onrender.com` | `https://armith.onrender.com` | Integration testing |
-| Production | `https://api.armith.com` | `https://armith.onrender.com` | Live traffic |

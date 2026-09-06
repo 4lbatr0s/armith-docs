@@ -254,6 +254,28 @@ html {
   transform: translateY(-1px);
 }
 
+.vp-doc a.armith-btn-primary,
+.vp-doc a.armith-api-card {
+  text-decoration: none;
+}
+
+.armith-trust-line {
+  margin: 0.75rem 0 1.5rem;
+  max-width: 40rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--vp-c-text-2);
+}
+
+.armith-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.25rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+
 /* Tables */
 .vp-doc table {
   border: 1px solid var(--armith-border-strong);
@@ -937,6 +959,35 @@ html {
 @media (min-width: 960px) {
   .content-container {
     max-width: 920px !important;
+  }
+}
+
+/* ──────── Accessibility: visible keyboard focus ──────── */
+
+.vp-doc a:focus-visible,
+.VPNav a:focus-visible,
+.VPSidebar a:focus-visible,
+.armith-btn-primary:focus-visible,
+.armith-api-card:focus-visible,
+.api-playground-endpoint-btn:focus-visible,
+.api-playground-tab:focus-visible {
+  outline: 2px solid var(--armith-green);
+  outline-offset: 2px;
+  border-radius: var(--armith-radius-sm);
+}
+
+/* ──────── Tables: horizontal scroll on small screens ──────── */
+
+@media (max-width: 720px) {
+  .vp-doc table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .vp-doc th,
+  .vp-doc td {
+    min-width: 110px;
   }
 }
 
