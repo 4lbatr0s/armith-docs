@@ -2,7 +2,7 @@
 
 ## Statuses
 
-**Checkpoints** (`id-check`/`selfie-check`/`eid-check` response, lowercase): `approved` · `pending` (ID ok, selfie still needed) · `rejected` (business rule) · `failed` (system).
+**Checkpoints** (`id-check`/`selfie-check`/`eid-check` response, lowercase): `approved` · `pending` (ID ok, later checkpoints still needed) · `rejected` (business rule) · `failed` (system). Video Ident (`videocall-check`) is a separate product with the same status vocabulary; it does not gate KYC.
 
 **Profile** (`GET /kyc/status/:profileId`, uppercase): `APPROVED` · `PENDING` · `REJECTED` · `FAILED` · `UNDER_REVIEW`. Lifecycle: `awaiting_id` · `awaiting_selfie` · `awaiting_screening` · `approved` · `rejected` · `failed` · `under_review`.
 
@@ -20,6 +20,7 @@
 | 2xxx | Invalid data/logic | `INVALID_IDENTITY_NUMBER`, `EXPIRED_ID`, `INVALID_AGE` |
 | 3xxx | Image/quality | `BLURRY_IMAGE`, `ADVERSARIAL_IMAGE_DETECTED`, `LOW_DOCUMENT_VITALITY` |
 | 4xxx | Selfie/liveness/match | `LOW_MATCH_CONFIDENCE`, `NO_FACE_DETECTED`, `SPOOFING_DETECTED` |
+| 43xx | Video Ident | `VIDEOCALL_LIVENESS`, `VIDEOCALL_DEEPFAKE`, `VIDEOCALL_CONSENT_REQUIRED`, `VIDEOCALL_KYC_REQUIRED` |
 | 5xxx | System | `GROQ_API_ERROR`, `INTERNAL_ERROR`, `INVALID_IMAGE_URL` |
 | 6xxx | Flow/preconditions | `PROFILE_ID_REQUIRED`, `UNSUPPORTED_COUNTRY`, `IMAGE_TOO_LARGE`, `PLAN_LIMIT_REACHED` (429) |
 | 7xxx | eID NFC | `EID_CHIP_AUTH_FAILED`, `EID_SOD_INVALID`, `EID_DATA_MISMATCH` |

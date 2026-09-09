@@ -92,6 +92,7 @@ export default defineConfig({
           { text: 'REST API — Upload Images', link: '/guides/rest-api/upload-images' },
           { text: 'REST API — Verify ID', link: '/guides/rest-api/verify-id' },
           { text: 'REST API — Verify Selfie', link: '/guides/rest-api/verify-selfie' },
+          { text: 'REST API — Verify Video Ident', link: '/guides/rest-api/verify-videocall' },
           { text: 'REST API — Check Status', link: '/guides/rest-api/check-status' },
           { text: 'REST API — Handle Results', link: '/guides/rest-api/handle-results' },
           { text: 'Hosted Capture', link: '/guides/hosted-capture/get-started' },

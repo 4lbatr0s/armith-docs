@@ -35,8 +35,14 @@ curl -X POST "https://armith-backend-live.onrender.com/config/preset" \
 | `idMinCaptureSharpness` / `selfieMinCaptureSharpness` | 0.38 | Preflight blur gates — lower = stricter |
 | `minDocumentVitalityConfidence` | 0.55 | Document liveness |
 | `faceDetectionConfidence` / `minLivenessConfidence` | 0.78 | Face + liveness floors |
+| `minLiveMatchConfidence` | 92 (0–100) | Live Video Ident face vs ID portrait |
+| `minActiveLivenessConfidence` | 0.80 | Active liveness on the live call |
+| `maxDeepfakeRisk` | 0.25 | Max injection / deepfake risk on the live still |
+| `minCallQualityScore` | 0.45 | Resolution / freeze floor |
+| `minDurationSeconds` | 45 | Reject drive-by joins |
+| `videocallDecisionMode` | `hybrid` | `hybrid` · `auto` · `agent_required` (human in the loop; not a certification) |
 | `minAge` / `maxAge` / `enforceAgeCheck` | 18 / 120 / true | Age rules |
-| Verification steps | ID + selfie | Require ID/selfie, AND/OR, partial submission |
+| Verification steps | ID + selfie | Require ID / selfie / AML. Video Ident is `videocallEnabled` (product on/off; not a KYC step). `videocallRequiresKycApproved` (default on) gates Video Ident on KYC `APPROVED`. |
 
 Changes apply immediately to new verifications.
 
@@ -44,7 +50,7 @@ Changes apply immediately to new verifications.
 
 ## Advanced (`PATCH /config`, Clerk + optimistic locking)
 
-`idCardThresholds.minOverallConfidence`, `maxTamperingRisk` · `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles` · `validationRules` (TC checksum, MRZ cross-check, `maxWarningCount` default 3, expiry, `warningEscalationStatus`) · `verificationFeatures` (auto-review bands, `riskScoreCeiling` default 55) · `adapters` (screening/face/liveness provider).
+`idCardThresholds.minOverallConfidence`, `maxTamperingRisk` · `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles` · `videocallThresholds` (`decisionMode`, `requireAgentConfirmation`, `requireDocumentOnCamera`, auto-review match band, `maxQueueWaitSeconds`) · `validationRules` (TC checksum, MRZ cross-check, `maxWarningCount` default 3, expiry, `warningEscalationStatus`) · `verificationFeatures` (`videocallEnabled` default off, `videocallRequiresKycApproved` default on, auto-review bands, `riskScoreCeiling` default 55) · `adapters` (screening/face/liveness provider).
 
 **Auto-review → `UNDER_REVIEW`:** warnings ≥ `maxWarningCount`, risk > `riskScoreCeiling`, or borderline confidence/spoofing bands. Webhook: `verification.manual_review_queued`.
 

@@ -357,6 +357,64 @@ paths:
           description: Selfie verification result
         '400':
           description: Validation failure
+  /kyc/videocall/session:
+    post:
+      tags: [KYC]
+      summary: Mint a Video Ident LiveKit session
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+        - captureSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recordingConsent]
+              properties:
+                profileId:
+                  type: string
+                recordingConsent:
+                  type: boolean
+      responses:
+        '200':
+          description: LiveKit wsUrl + applicant JWT
+        '409':
+          description: VIDEOCALL_NOT_REQUIRED
+  /kyc/videocall/heartbeat:
+    post:
+      tags: [KYC]
+      summary: Applicant waiting-room heartbeat
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+        - captureSession: []
+      responses:
+        '200':
+          description: Session status
+  /kyc/videocall/frame:
+    post:
+      tags: [KYC]
+      summary: Score a live-call still against the ID portrait
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+        - captureSession: []
+      responses:
+        '200':
+          description: Running scores
+  /kyc/videocall-check:
+    post:
+      tags: [KYC]
+      summary: Finalize Video Ident (thresholds + hybrid decision)
+      security:
+        - apiKeyAuth: []
+        - bearerAuth: []
+        - captureSession: []
+      responses:
+        '200':
+          description: Videocall checkpoint result
   /kyc/status/{profileId}:
     get:
       tags: [KYC]

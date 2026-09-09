@@ -323,6 +323,59 @@ export const PLAYGROUND_ENDPOINTS = [
     ]
   },
   {
+    id: 'kyc-videocall-session',
+    tag: 'KYC',
+    title: 'Video Ident session',
+    description: 'Mint a LiveKit applicant token. Requires recordingConsent. Video Ident must be enabled; independent of KYC.',
+    method: 'POST',
+    path: '/kyc/videocall/session',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify(
+      {
+        profileId: '672a9c2e3f1b2c4d5e6f7890',
+        recordingConsent: true
+      },
+      null,
+      2
+    ),
+    responseExamples: [
+      {
+        status: 200,
+        label: 'Session minted',
+        body: {
+          sessionId: '672a9c2e3f1b2c4d5e6f7891',
+          roomName: 'armith-vc-demo',
+          wsUrl: 'wss://example.livekit.cloud',
+          token: 'eyJ…',
+          status: 'waiting',
+          livekitConfigured: true
+        }
+      },
+      {
+        status: 409,
+        label: 'Not required',
+        body: { status: 'failed', errors: [{ textCode: 'VIDEOCALL_NOT_REQUIRED', message: 'Video identification is not part of this workflow.' }] }
+      }
+    ]
+  },
+  {
+    id: 'kyc-videocall-check',
+    tag: 'KYC',
+    title: 'Finalize Video Ident',
+    description: 'Server-gated hybrid decision after hangup or agent disposition.',
+    method: 'POST',
+    path: '/kyc/videocall-check',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({ profileId: '672a9c2e3f1b2c4d5e6f7890', sessionId: '672a9c2e3f1b2c4d5e6f7891' }, null, 2),
+    responseExamples: [
+      {
+        status: 200,
+        label: 'Approved',
+        body: { status: 'approved', overallStatus: 'APPROVED', profileId: '672a9c2e3f1b2c4d5e6f7890', errors: [], scores: { liveMatchConfidence: 94 } }
+      }
+    ]
+  },
+  {
     id: 'kyc-selfie-check',
     tag: 'KYC',
     title: 'Selfie verification',

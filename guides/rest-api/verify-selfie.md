@@ -219,6 +219,7 @@ Use `ak_test_` key + `sandboxScenario`:
 
 ## What's Next?
 
+- [Verify Video Ident](/guides/rest-api/verify-videocall) — live recorded call
 - [Check Status](/guides/rest-api/check-status) — poll for final result
 - [Handle Results](/guides/rest-api/handle-results) — user-facing messages
 - [Webhooks](/guides/webhooks/get-started) — real-time delivery

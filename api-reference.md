@@ -104,6 +104,12 @@ ID extraction + validation. Preflight blur/adversarial gates. Optional `integrat
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/selfie-check`
 Face match + liveness checks. Requires `profileId` when both ID and selfie are mandatory. Supports `async` and `sandboxScenario`.
 
+### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall/session`
+Mint a LiveKit applicant token for Video Ident. Requires recording consent. Only when Video Ident is enabled (`videocallEnabled`). By default KYC must already be `APPROVED` (`videocallRequiresKycApproved`). Does not affect KYC approval.
+
+### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall-check`
+Finalize Video Ident scores (`auto` / `hybrid` / `agent_required`). Server is the gate.
+
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-check`
 eID NFC chip verification. Cryptographic validation of chip data against visual document.
 

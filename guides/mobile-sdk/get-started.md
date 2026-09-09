@@ -8,7 +8,7 @@ Native in-app KYC for React Native. Two packages: a headless client + an optiona
 
 | Package | What it does |
 |---------|--------------|
-| `@armith/kyc-react-native` | Headless: session URL, upload, id/selfie-check, poll, result code |
+| `@armith/kyc-react-native` | Headless: session URL, upload, id/selfie-check, Video Ident session/heartbeat/frame/finalize, poll, result code |
 | `@armith/kyc-capture` | Optional camera screens (vision-camera + ML Kit). Needs dev client / bare RN — **not Expo Go** |
 
 > Not on npm yet — install from git. Hosted browser capture (`/m/start`, `/w/start`) works without either package.
@@ -57,7 +57,7 @@ Open the hosted capture in a WebView / browser — no camera code needed:
 import { ArmithKyc } from '@armith/kyc-react-native';
 
 const kyc = new ArmithKyc({ apiBaseUrl: 'https://armith-backend-live.onrender.com' });
-kyc.openSessionUrl(redirectUrl); // parses /m/start?t=… or /w/start?t=…, stores token
+kyc.openSessionUrl(redirectUrl); // parses /m/start, /w/start, or Video Ident /v/start
 ```
 
 After the user finishes, exchange the result `code` **on your backend** (`POST /kyc/sessions/complete`).
@@ -88,9 +88,14 @@ const { returnUrl } = await kyc.completeAndRedirect();
 | Method | Does |
 |--------|------|
 | `getSupportedCountries(apiBaseUrl)` | `GET /kyc/countries` |
-| `openSessionUrl(url)` | Parse redirect URL, store write token |
+| `openSessionUrl(url)` | Parse `/m/start`, `/w/start`, or `/v/start`; store write token |
+| `openVideocallInviteUrl(url)` | Parse `/v/start` invite (skips `expectedChannel`; dashboard invites are web) |
 | `startIdVerification(input)` | Presign → upload → `id-check` |
 | `startSelfieVerification(input)` | Presign → upload → `selfie-check` |
+| `startVideocallSession(recordingConsent?)` | Mint LiveKit applicant JWT (`POST /kyc/videocall/session`). Independent of KYC approval; tenant must enable Video Ident. Join the room with `@livekit/react-native`. |
+| `videocallHeartbeat(sessionId)` | Applicant still waiting |
+| `submitVideocallFrame(input)` | Groq still (`frameImageUrl` or `frameDataUrl`) |
+| `finalizeVideocall(sessionId?)` | `POST /kyc/videocall-check` |
 | `pollStatus(options?)` | Poll `GET /kyc/status/:profileId` |
 | `completeAndRedirect()` | Mint result code + build `returnUrl` |
 

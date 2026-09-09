@@ -2,6 +2,8 @@
 
 Let Armith host the ID + selfie UI. You create a session, redirect the user, get the result back. No capture UI to build.
 
+Video Ident is a **separate product** — enable it in Settings and start it from the case page (`/v/start`), not as a hosted KYC step.
+
 ---
 
 ## How It Works (30 seconds)
@@ -13,7 +15,7 @@ Your Backend → Armith → redirectUrl → User completes capture on Armith pag
 
 1. **Create session** (`POST /kyc/profiles`) — get `redirectUrl` + `profileId`
 2. **Redirect user** to `redirectUrl`
-3. **User completes** ID + selfie on Armith's page
+3. **User completes** ID → selfie (if required) on Armith's page
 4. **Callback** to your `returnUrl` with `?code=` or `?error=`
 5. **Exchange code** (`POST /kyc/sessions/complete`) — get full result
 6. **(Recommended)** Webhook delivers the same result in real time
@@ -71,7 +73,7 @@ res.redirect(redirectUrl);
 <a href="REDIRECT_URL">Verify my identity</a>
 ```
 
-Armith's page guides the user through: ID front → ID back (if needed) → selfie → verification → auto-redirect back.
+Armith's page guides the user through: consent (including recording when Video Ident is on) → ID front → ID back (if needed) → selfie if required → Video Ident waiting room / live call if required → verification → auto-redirect back.
 
 Mobile deep links work too: `"returnUrl": "yourapp://kyc/callback"`.
 

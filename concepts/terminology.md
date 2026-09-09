@@ -8,8 +8,8 @@ Quick reference for Armith-specific terms.
 
 | Term | Definition |
 |------|------------|
-| **Profile** | A single verification session for one person. Contains ID check, selfie check, screening, and final status. Identified by `profileId` (MongoDB ObjectId). |
-| **Checkpoint** | One verification step: `id-check`, `selfie-check`, or `eid-check`. Each has its own status. |
+| **Profile** | A single applicant record. KYC (ID, selfie, screening) and optional Video Ident attach to the same profile but have separate statuses. Identified by `profileId` (MongoDB ObjectId). |
+| **Checkpoint** | A KYC verification step: `id-check`, `selfie-check`, or `eid-check`. Video Ident (`videocall-check`) is a separate product, not a KYC checkpoint. |
 | **ProfileId** | The primary key for all API calls. Returned by `id-check` and `POST /kyc/profiles`. |
 | **Session** | Sometimes used interchangeably with Profile. In Hosted Capture, a "capture session" is a short-lived token for the UI. |
 
