@@ -111,7 +111,7 @@ Mint a LiveKit applicant token for Video Ident. Requires recording consent. Only
 Finalize Video Ident scores (`auto` / `hybrid` / `agent_required`). Server is the gate.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-check`
-eID NFC chip verification. Cryptographic validation of chip data against visual document.
+**Preview.** eID NFC chip verification. Chip authenticity is client-attested until server NFC exists — do not treat as production-grade.
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/status/:profileId`
 Combined verification progress and checkpoint results (uppercase profile status).
@@ -145,6 +145,8 @@ Consume result code and return final KYC status. API key only.
 Mint a result code during capture flow. Capture session auth.
 
 ## KYB
+
+**Preview.** Manual legal-entity records only. Automated business-document verification is not production-ready.
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyb/profiles`
 List KYB profiles. API key.

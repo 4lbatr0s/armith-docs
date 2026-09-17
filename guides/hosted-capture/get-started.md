@@ -18,7 +18,11 @@ Your Backend → Armith → redirectUrl → User completes capture on Armith pag
 3. **User completes** ID → selfie (if required) on Armith's page
 4. **Callback** to your `returnUrl` with `?code=` or `?error=`
 5. **Exchange code** (`POST /kyc/sessions/complete`) — get full result
-6. **(Recommended)** Webhook delivers the same result in real time
+6. **(Required for production)** Webhook delivers the official decisioned result. The `returnUrl` redirect is applicant UX only.
+
+---
+
+Applicants see a priming screen, consent before camera, overlay guidance, and on `/w/start` a QR/link handoff to `/m/start` for the same session. Result codes stay valid for 15 minutes by default.
 
 ---
 

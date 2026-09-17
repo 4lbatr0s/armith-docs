@@ -2,6 +2,8 @@
 
 Get real-time verification results instead of polling. Armith sends HTTPS POST on terminal and review events.
 
+**Webhooks are the source of truth.** Hosted capture redirects and one-time result codes are applicant UX. Integrators must act on decisioned webhook events (`verification.completed`, `verification.failed`, `verification.manual_review_resolved`), not on the browser redirect.
+
 ---
 
 ## Events
