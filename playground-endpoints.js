@@ -1,6 +1,6 @@
 /**
  * REST playground catalog — mirrors public API routes (sandbox/production).
- * `auth`: none | clerk | apiKeyOrClerk
+ * `auth`: none | clerk | apiKeyOrClerk | captureWrite
  */
 
 export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Integrator', 'KYB', 'Admin', 'Webhooks', 'Config'];
@@ -12,7 +12,7 @@ export const PLAYGROUND_TAG_ORDER = ['Health', 'Auth', 'KYC', 'Integrator', 'KYB
  *   description: string,
  *   method: string,
  *   path: string,
- *   auth: 'none'|'clerk'|'apiKeyOrClerk',
+ *   auth: 'none'|'clerk'|'apiKeyOrClerk'|'captureWrite',
  *   body?: string,
  *   pathParams?: Array<{ name: string, example?: string, description?: string }>,
  *   responseExamples: Array<{ status: number, label: string, body?: unknown }>
@@ -948,8 +948,8 @@ export const PLAYGROUND_ENDPOINTS = [
     path: '/health/ready',
     auth: 'none',
     responseExamples: [
-      { status: 200, label: 'All systems ready', body: { status: 'ok', checks: { mongo: 'ok', r2: 'ok', groq: 'ok', redis: 'ok', biometrics: 'ok' } } },
-      { status: 503, label: 'Service unavailable', body: { status: 'error', checks: { mongo: 'ok', biometrics: 'fail' } } }
+      { status: 200, label: 'All systems ready', body: { ready: true, timestamp: '2026-09-18T20:00:00.000Z', checks: { mongo: 'ok', r2: 'ok', groq: 'ok', redis: 'ok', biometrics: 'ok' } } },
+      { status: 503, label: 'Service unavailable', body: { ready: false, timestamp: '2026-09-18T20:00:00.000Z', checks: { mongo: 'ok', biometrics: 'fail' } } }
     ]
   },
   {
@@ -1093,7 +1093,7 @@ export const PLAYGROUND_ENDPOINTS = [
     description: 'Write capture token only. Purpose defaults to identity_verification.',
     method: 'POST',
     path: '/kyc/sessions/consent',
-    auth: 'apiKeyOrClerk',
+    auth: 'captureWrite',
     body: JSON.stringify({ purpose: 'identity_verification' }, null, 2),
     responseExamples: [
       {

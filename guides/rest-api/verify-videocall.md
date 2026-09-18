@@ -97,7 +97,7 @@ Finalize is **server-gated**. Groq stills never have the last word. Default `vid
 | Mode | Without agent disposition | With agent `approved` |
 |------|---------------------------|------------------------|
 | `agent_required` (default) | No claim → `409 VIDEOCALL_NO_AGENT` (4307). After claim, errors → `UNDER_REVIEW`, else `PENDING`. | `APPROVED`, unless fewer than `minFrameCount` scored frames → `UNDER_REVIEW` (`VIDEOCALL_NO_FRAMES` / 4315) |
-| `hybrid` | Errors in match band 78–91 → `UNDER_REVIEW`, else `REJECTED`. Clean path is `UNDER_REVIEW`, **not** `APPROVED`. | Same as above |
+| `hybrid` | No claim → `409 VIDEOCALL_NO_AGENT` (4307). After claim, errors → `UNDER_REVIEW`, else `PENDING`. Finalize never returns `REJECTED` without agent disposition. | Same as above |
 | `auto` | Errors → `REJECTED`. Clean path is `UNDER_REVIEW` (single-JPEG Groq is agent-assist only). | Same as above |
 
 Need at least **3** scored frames (`minFrameCount`) when LiveKit is configured, or finalize records `VIDEOCALL_NO_FRAMES`. Agent disposition without a stored recording key (and document-on-camera required) → `VIDEOCALL_RECORDING_FAILED` (4308).
