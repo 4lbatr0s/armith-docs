@@ -24,5 +24,6 @@
 - **ID is lenient** (warnings can still approve); **selfie/eID are strict** (any error rejects). Don't try to make ID strict via thresholds alone — use workflows + manual review.
 - LLM quality is capped by capture sharpness (`effectiveQuality = min(llmQuality, captureSharpness)`), so raising LLM floors without fixing capture won't help blurry traffic.
 - Screening (`requireAml`) and eID are post-steps — tune them separately ([Screening →](/advanced/screening), [eID →](/advanced/eid-nfc)).
+- Video Ident defaults to `agent_required`. Do not switch to `auto` expecting Groq stills to `APPROVE` — the clean path is `UNDER_REVIEW` until an agent disposes. `minFrameCount` (default 3) is fail-closed.
 
 Snapshot of thresholds used per verification is returned on `GET /kyc/status/:profileId` (`thresholds`) — use it to debug "why did this reject?".

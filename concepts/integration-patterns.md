@@ -98,8 +98,10 @@ Your Backend           Armith API           User Browser
     │                     │                    │
     │  POST /sessions/complete                │
     │────────────────────►│                    │
-    │◄───── result ────────│                    │
+    │◄───── slim status ───│                    │
 ```
+
+Webhooks (or `GET /kyc/status`) are the official decisioned result.
 
 **When to choose:**
 - Web app, want integration in hours not days
@@ -154,10 +156,10 @@ Your RN App              Your Backend           Armith
 ## All Paths Support
 
 - **Same verification engine** — identical results
-- **Same webhooks** — `verification.completed`, `verification.failed`
-- **Same sandbox** — `ak_test_` keys work on all paths
+- **Same webhooks** — `verification.completed`, `verification.failed` (source of truth)
+- **Same sandbox** — `ak_test_` keys work on ID/selfie paths (not Video Ident)
 - **Same status polling** — `GET /kyc/status/:profileId`
-- **Same authentication** — API keys on backend, session tokens for capture
+- **Same authentication** — API keys on backend, write session tokens for capture
 
 ---
 

@@ -8,16 +8,18 @@ Enable the product with `verificationFeatures.videocallEnabled` (Admin → Setti
 
 By default, **Video Ident can start or finish only after KYC is `APPROVED`** (`videocallRequiresKycApproved`, default on). Turn that off to run Video Ident as a fully separate flow. KYC approval never waits on Video Ident.
 
+Production default is **fail-closed**: `decisionMode` is `agent_required`, Groq stills are agent-assist only, and LiveKit hangup does **not** auto-approve.
+
 ---
 
 ## Flow
 
 1. Tenant enables Video Ident (independent of KYC).
-2. Start from an existing profile: Admin case → **Start Video Ident** (copies `/v/start?t=…`) or mint `POST /kyc/videocall/session` with a write token.
-3. Applicant opens `/v/start`, consents to recording, joins LiveKit (`wsUrl` + `token`).
-4. Optional: `POST /kyc/videocall/frame` with a still (`frameImageUrl` or `frameDataUrl`) for Groq scores vs the ID portrait when one exists.
-5. Tenant agent claims the room from Admin → Video desk (`POST /admin/videocall/:id/claim`).
-6. Hangup / agent disposition → `POST /kyc/videocall-check` (or LiveKit room-finished webhook).
+2. Start from an existing profile: Admin case → **Start Video Ident** (copies `/v/start?t=…`) or mint `POST /kyc/videocall/session` with a write token / API key.
+3. Applicant opens `/v/start`, consents to recording (`POST /kyc/sessions/consent` or `recordingConsent: true`), joins LiveKit (`wsUrl` + `token`).
+4. Optional: `POST /kyc/videocall/frame` with a still (`frameImageUrl` or `frameDataUrl`) for Groq scores vs the ID portrait when one exists. `sessionId` is required.
+5. Tenant agent claims the room from Admin → Video desk (`POST /admin/videocall/:id/claim`). Two agents cannot claim the same room.
+6. Agent disposition (`POST /admin/videocall/:id/disposition`) runs `POST /kyc/videocall-check`. LiveKit `room_finished` / `egress_ended` mark the session `abandoned` and do **not** finalize.
 
 KYC hosted capture (`/w/start`, `/m/start`) never includes this step.
 
@@ -29,7 +31,11 @@ KYC hosted capture (`/w/start`, `/m/start`) never includes this step.
 POST https://armith-backend-live.onrender.com/kyc/videocall/session
 ```
 
-Headers: `x-api-key` or `X-Verification-Session` (capture write token). Video Ident must be enabled. By default the profile KYC status must already be `APPROVED` (`VIDEOCALL_KYC_REQUIRED` / 4314 if not). Turn off `videocallRequiresKycApproved` to skip that check.
+Headers: `x-api-key` or `X-Verification-Session` (capture **write** token). Video Ident must be enabled. By default the profile KYC status must already be `APPROVED` (`VIDEOCALL_KYC_REQUIRED` / 4314 if not). Turn off `videocallRequiresKycApproved` to skip that check.
+
+`profileId` is optional when a write capture token can bind a **PENDING shell profile** — only if the KYC gate is off. If the gate is on and there is no approved profile, the API returns `VIDEOCALL_KYC_REQUIRED`. No profile and no capture session → `PROFILE_ID_REQUIRED`.
+
+Consent: send `recordingConsent: true`, or record it first with `POST /kyc/sessions/consent` (`purpose` defaults to `identity_verification`). Otherwise `VIDEOCALL_CONSENT_REQUIRED` / 4313.
 
 ```json
 {
@@ -43,6 +49,7 @@ Headers: `x-api-key` or `X-Verification-Session` (capture write token). Video Id
 ```json
 {
   "sessionId": "…",
+  "profileId": "672a9c2e3f1b2c4d5e6f7890",
   "roomName": "armith-vc-…",
   "wsUrl": "wss://….livekit.cloud",
   "token": "eyJ…",
@@ -51,7 +58,7 @@ Headers: `x-api-key` or `X-Verification-Session` (capture write token). Video Id
 }
 ```
 
-LiveKit credentials never leave the API. The SPA/SDK only receives a short-lived participant JWT.
+LiveKit credentials never leave the API. The SPA/SDK only receives a short-lived participant JWT. Missing LiveKit in production → `503 VIDEOCALL_NOT_CONFIGURED` (4309).
 
 ---
 
@@ -59,9 +66,9 @@ LiveKit credentials never leave the API. The SPA/SDK only receives a short-lived
 
 | Endpoint | Purpose |
 |----------|---------|
-| `POST /kyc/videocall/heartbeat` | Applicant still waiting (`sessionId`) |
-| `POST /kyc/videocall/frame` | Groq still vs ID portrait |
-| `POST /kyc/videocall-check` | Finalize Video Ident scores (does not change `profile.status`) |
+| `POST /kyc/videocall/heartbeat` | Applicant still waiting. Body `{ "sessionId" }` (required). Returns `frameCount`. |
+| `POST /kyc/videocall/frame` | Groq still vs ID portrait. `sessionId` required. |
+| `POST /kyc/videocall-check` | Finalize Video Ident scores (does **not** change KYC `profile.status`) |
 
 Frame body:
 
@@ -73,11 +80,27 @@ Frame body:
 }
 ```
 
-Finalize is **server-gated**. The LLM never has the last word.
+Finalize is **server-gated**. Groq stills never have the last word. Default `videocallThresholds`:
 
-- `auto` — thresholds only
-- `hybrid` (default) — green `APPROVED`, gray `UNDER_REVIEW`, red `REJECTED`
-- `agent_required` — AI is advisory until an agent posts disposition
+| Key | Default |
+|-----|---------|
+| `decisionMode` | `agent_required` |
+| `requireAgentConfirmation` | `true` |
+| `minFrameCount` | `3` |
+| `minLiveMatchConfidence` | `92` |
+| `minActiveLivenessConfidence` | `0.80` |
+| `maxDeepfakeRisk` | `0.25` |
+| `minCallQualityScore` | `0.45` |
+| `minDurationSeconds` | `45` |
+| `requireDocumentOnCamera` | `true` |
+
+| Mode | Without agent disposition | With agent `approved` |
+|------|---------------------------|------------------------|
+| `agent_required` (default) | No claim → `409 VIDEOCALL_NO_AGENT` (4307). After claim, errors → `UNDER_REVIEW`, else `PENDING`. | `APPROVED`, unless fewer than `minFrameCount` scored frames → `UNDER_REVIEW` (`VIDEOCALL_NO_FRAMES` / 4315) |
+| `hybrid` | Errors in match band 78–91 → `UNDER_REVIEW`, else `REJECTED`. Clean path is `UNDER_REVIEW`, **not** `APPROVED`. | Same as above |
+| `auto` | Errors → `REJECTED`. Clean path is `UNDER_REVIEW` (single-JPEG Groq is agent-assist only). | Same as above |
+
+Need at least **3** scored frames (`minFrameCount`) when LiveKit is configured, or finalize records `VIDEOCALL_NO_FRAMES`. Agent disposition without a stored recording key (and document-on-camera required) → `VIDEOCALL_RECORDING_FAILED` (4308).
 
 Outcome is stored on `VideocallValidation` / `profile.videocallVerificationStatus`. It does **not** rewrite KYC `profile.status`.
 
@@ -90,27 +113,30 @@ Outcome is stored on `VideocallValidation` / `profile.videocallVerificationStatu
 - `videocall` `{ enabled, requiresKycApproved, status, completed, approved, sessionId }`
 - `videocallVerification` scores + confidence rows when a call has been scored
 - `progress.isFullyVerified` is ID + selfie + AML only
+- `verificationRules.requireVideocall` is always `false`
 - `session.lifecycle.phase` never waits on video (`awaiting_id` / `awaiting_selfie` only)
 
 ---
 
 ## Admin
 
-Clerk, tenant-scoped:
+Clerk, tenant-scoped. Dashboard: **Admin → Video desk** (`?tab=video_desk`). Queue badge is the count of `waiting` rooms, polled from `GET /admin/videocall/queue`. Deep link `/admin?tab=video_desk&join={sessionId}` auto-claims.
 
 | Endpoint | Purpose |
 |----------|---------|
-| `POST /admin/videocall/:profileId/invite` | Mint applicant `/v/start` write token |
-| `GET /admin/videocall/queue` | Waiting / in-call rooms |
-| `POST /admin/videocall/:id/claim` | Agent JWT |
+| `POST /admin/videocall/:profileId/invite` | Mint applicant `/v/start` **write** token. 200 `{ token, expiresAtEpochSec, profileId, captureSessionId }`. 409 `VIDEOCALL_NOT_ENABLED` / `VIDEOCALL_KYC_REQUIRED`. |
+| `GET /admin/videocall/queue` | Waiting + in-call rooms (max 50) |
+| `POST /admin/videocall/:id/claim` | Atomic claim. Same agent can rejoin. Conflict → `409 VIDEOCALL_ALREADY_CLAIMED` (4316) with `claimedBy`. |
 | `POST /admin/videocall/:id/disposition` | `{ "disposition": "approved" \| "rejected", "notes": "…" }` |
-| `GET /admin/videocall/:id/recording` | Signed R2 download (never a public LiveKit URL) |
+| `GET /admin/videocall/:id/recording` | Signed R2 download (never a public LiveKit URL). 404 `VIDEOCALL_RECORDING_FAILED` if no object key. |
+
+`POST /admin/verifications/:profileId/capture-session` is a **v1 read-only** status token. It cannot drive `/v/start`, `/w/start`, or `/m/start`. Use the Video Ident invite or `POST /kyc/profiles` for write links.
 
 ---
 
 ## Error family (43xx)
 
-`VIDEOCALL_NOT_ENABLED` · `VIDEOCALL_NOT_REQUIRED` (same 4301) · `VIDEOCALL_KYC_REQUIRED` (4314) · `VIDEOCALL_CONSENT_REQUIRED` · `VIDEOCALL_NOT_CONFIGURED` · `VIDEOCALL_TIMEOUT` · `VIDEOCALL_QUALITY` · `VIDEOCALL_LIVENESS` · `VIDEOCALL_DEEPFAKE` · `VIDEOCALL_LOW_MATCH` · `VIDEOCALL_TOO_SHORT` · `VIDEOCALL_DOCUMENT_NOT_SHOWN` · `VIDEOCALL_NO_AGENT` · `VIDEOCALL_RECORDING_FAILED`
+`VIDEOCALL_NOT_ENABLED` · `VIDEOCALL_NOT_REQUIRED` (same 4301) · `VIDEOCALL_KYC_REQUIRED` (4314) · `VIDEOCALL_CONSENT_REQUIRED` (4313) · `VIDEOCALL_NOT_CONFIGURED` (4309, HTTP 503 in production) · `VIDEOCALL_TIMEOUT` · `VIDEOCALL_QUALITY` · `VIDEOCALL_LIVENESS` · `VIDEOCALL_DEEPFAKE` · `VIDEOCALL_LOW_MATCH` · `VIDEOCALL_TOO_SHORT` · `VIDEOCALL_DOCUMENT_NOT_SHOWN` · `VIDEOCALL_NO_AGENT` (4307, HTTP 409 when mode ≠ `auto` and no claim) · `VIDEOCALL_RECORDING_FAILED` (4308) · `VIDEOCALL_NO_FRAMES` (4315) · `VIDEOCALL_ALREADY_CLAIMED` (4316)
 
 ---
 

@@ -17,12 +17,14 @@ Your Backend → Armith → redirectUrl → User completes capture on Armith pag
 2. **Redirect user** to `redirectUrl`
 3. **User completes** ID → selfie (if required) on Armith's page
 4. **Callback** to your `returnUrl` with `?code=` or `?error=`
-5. **Exchange code** (`POST /kyc/sessions/complete`) — get full result
+5. **Exchange code** (`POST /kyc/sessions/complete`) — slim `{ profileId, status, integrationExternalRef }`
 6. **(Required for production)** Webhook delivers the official decisioned result. The `returnUrl` redirect is applicant UX only.
 
 ---
 
-Applicants see a priming screen, consent before camera, overlay guidance, and on `/w/start` a QR/link handoff to `/m/start` for the same session. Result codes stay valid for 15 minutes by default.
+Applicants see a priming screen, consent before camera (`POST /kyc/sessions/consent`), overlay guidance, then ID → selfie (if required) → result. On `/w/start`, desktop users get a local QR + copy of `{origin}/m/start?t=…` for the **same write token** (the token is never sent to a third-party QR service). Hosted KYC never includes a Video Ident waiting room.
+
+Result codes stay valid for **15 minutes** by default (`KYC_RESULT_CODE_TTL_SECONDS`, default 900). After success, the hosted page waits ~5 seconds then redirects to `returnUrl?code=&state=`.
 
 ---
 
@@ -38,18 +40,19 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/profiles" \
     "channel": "web",
     "returnUrl": "https://yourapp.com/kyc/callback",
     "state": "csrf-token-abc123",
-    "ttlSeconds": 3600
+    "ttlSeconds": 900
   }'
 ```
 
 | Field | Required | Notes |
 |-------|----------|-------|
 | `integrationExternalRef` | yes | Your order/user ID (1–256 chars) |
-| `returnUrl` | yes | Must match your tenant allowlist (`kycReturnUrlAllowlist`) |
+| `returnUrl` | yes | Must match your tenant allowlist (`kycReturnUrlAllowlist`). Production rejects `*`. |
 | `state` | yes | CSRF token 8–256 chars — echoed back unchanged |
 | `countryCode` | no | Defaults to `TR` |
 | `channel` | no | `web` or `mobile` — picks `/w/start` vs `/m/start` |
-| `ttlSeconds` | no | 60–604800, default 3600 |
+| `ttlSeconds` | no | 60–604800, **default 900** (15 min) |
+| `workflowId` | no | Tenant workflow overlay (1–128 chars) |
 | `integrationMetadata` | no | Max 20 keys, echoed in webhooks |
 
 **Response:**
@@ -77,7 +80,7 @@ res.redirect(redirectUrl);
 <a href="REDIRECT_URL">Verify my identity</a>
 ```
 
-Armith's page guides the user through: consent (including recording when Video Ident is on) → ID front → ID back (if needed) → selfie if required → Video Ident waiting room / live call if required → verification → auto-redirect back.
+Armith's page guides the user through: prime → consent → ID front → ID back (if needed) → selfie if required → result → auto-redirect back. Video Ident is a separate product on `/v/start`.
 
 Mobile deep links work too: `"returnUrl": "yourapp://kyc/callback"`.
 
@@ -118,16 +121,13 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/sessions/complete" \
 
 ```json
 {
-  "status": "APPROVED",
   "profileId": "672a9c2e3f1b2c4d5e6f7890",
-  "country": "TR",
-  "idVerification": { "status": "APPROVED", "fullName": "Ada Lovelace", "overallConfidence": 0.94 },
-  "selfieVerification": { "status": "APPROVED", "matchConfidence": 96 },
-  "progress": { "isFullyVerified": true }
+  "status": "approved",
+  "integrationExternalRef": "order-12345"
 }
 ```
 
-> Codes are single-use and short-lived. Exchange immediately. Only mintable after terminal status (`APPROVED`, `REJECTED`, `FAILED`, `UNDER_REVIEW`).
+> The exchange returns a **slim** payload (`profileId`, lowercase `status`, `integrationExternalRef`). Full scores live on the [webhook](/guides/webhooks/get-started) and `GET /kyc/status/:profileId`. Codes are single-use. Only mintable after terminal status (`APPROVED`, `REJECTED`, `FAILED`, `UNDER_REVIEW`). Production stores codes in Redis (`503 RESULT_CODE_STORE_UNAVAILABLE` if Redis is down). Invalid/expired/used codes → `400 RESULT_CODE_INVALID`.
 
 ---
 
@@ -143,6 +143,8 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/profiles/PROFILE_ID/s
 ```
 
 Simple one-shot variant (no prior profile): `POST /kyc/hosted-sessions` — same body, defaults `channel: web`.
+
+Admin **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) issues a **v1 read-only** token for `GET /kyc/status`. It cannot open `/w/start` or `/m/start`. Integrator write links come from `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions`.
 
 ---
 

@@ -326,7 +326,8 @@ export const PLAYGROUND_ENDPOINTS = [
     id: 'kyc-videocall-session',
     tag: 'KYC',
     title: 'Video Ident session',
-    description: 'Mint a LiveKit applicant token. Requires recordingConsent. Video Ident must be enabled; independent of KYC.',
+    description:
+      'Mint a LiveKit applicant token. Requires recordingConsent. Video Ident must be enabled. Default KYC gate: profile APPROVED. Response includes profileId.',
     method: 'POST',
     path: '/kyc/videocall/session',
     auth: 'apiKeyOrClerk',
@@ -344,6 +345,7 @@ export const PLAYGROUND_ENDPOINTS = [
         label: 'Session minted',
         body: {
           sessionId: '672a9c2e3f1b2c4d5e6f7891',
+          profileId: '672a9c2e3f1b2c4d5e6f7890',
           roomName: 'armith-vc-demo',
           wsUrl: 'wss://example.livekit.cloud',
           token: 'eyJ…',
@@ -353,8 +355,11 @@ export const PLAYGROUND_ENDPOINTS = [
       },
       {
         status: 409,
-        label: 'Not required',
-        body: { status: 'failed', errors: [{ textCode: 'VIDEOCALL_NOT_REQUIRED', message: 'Video identification is not part of this workflow.' }] }
+        label: 'Not enabled / KYC required',
+        body: {
+          status: 'failed',
+          errors: [{ textCode: 'VIDEOCALL_NOT_ENABLED', message: 'Video Ident is not enabled for this tenant.' }]
+        }
       }
     ]
   },
@@ -362,7 +367,8 @@ export const PLAYGROUND_ENDPOINTS = [
     id: 'kyc-videocall-check',
     tag: 'KYC',
     title: 'Finalize Video Ident',
-    description: 'Server-gated hybrid decision after hangup or agent disposition.',
+    description:
+      'Server-gated decision after hangup or agent disposition. Default mode agent_required — Groq stills cannot auto-APPROVE.',
     method: 'POST',
     path: '/kyc/videocall-check',
     auth: 'apiKeyOrClerk',
@@ -370,8 +376,22 @@ export const PLAYGROUND_ENDPOINTS = [
     responseExamples: [
       {
         status: 200,
-        label: 'Approved',
-        body: { status: 'approved', overallStatus: 'APPROVED', profileId: '672a9c2e3f1b2c4d5e6f7890', errors: [], scores: { liveMatchConfidence: 94 } }
+        label: 'Pending agent / under review',
+        body: {
+          status: 'pending',
+          profileStatus: 'APPROVED',
+          profileId: '672a9c2e3f1b2c4d5e6f7890',
+          errors: [],
+          scores: { liveMatchConfidence: 94, frameCount: 3 }
+        }
+      },
+      {
+        status: 409,
+        label: 'No agent claimed',
+        body: {
+          status: 'failed',
+          errors: [{ textCode: 'VIDEOCALL_NO_AGENT', numericCode: 4307 }]
+        }
       }
     ]
   },
@@ -923,13 +943,13 @@ export const PLAYGROUND_ENDPOINTS = [
     id: 'health-ready',
     tag: 'Health',
     title: 'Readiness check',
-    description: 'Readiness probe — checks MongoDB, R2, and Groq connectivity.',
+    description: 'Readiness probe — MongoDB, R2, Groq, Redis, and vendor biometrics.',
     method: 'GET',
     path: '/health/ready',
     auth: 'none',
     responseExamples: [
-      { status: 200, label: 'All systems ready', body: { status: 'ok', mongo: true, r2: true, groq: true } },
-      { status: 503, label: 'Service unavailable', body: { status: 'error', mongo: false, groq: true } }
+      { status: 200, label: 'All systems ready', body: { status: 'ok', checks: { mongo: 'ok', r2: 'ok', groq: 'ok', redis: 'ok', biometrics: 'ok' } } },
+      { status: 503, label: 'Service unavailable', body: { status: 'error', checks: { mongo: 'ok', biometrics: 'fail' } } }
     ]
   },
   {
@@ -989,7 +1009,7 @@ export const PLAYGROUND_ENDPOINTS = [
       },
       {
         status: 400, label: 'Chip auth failed',
-        body: { status: 'failed', errors: [{ code: 7001, textCode: 'EID_CHIP_AUTH_FAILED', message: 'eID chip could not be cryptographically authenticated.' }] }
+        body: { status: 'failed', errors: [{ code: 7001, textCode: 'MISSING_CHIP_DATA', message: 'NFC chip data is required but was not provided.' }] }
       }
     ]
   },
@@ -1008,7 +1028,7 @@ export const PLAYGROUND_ENDPOINTS = [
       channel: 'mobile',
       returnUrl: 'https://yourapp.com/kyc/callback',
       state: 'csrf-token-abc',
-      ttlSeconds: 3600
+      ttlSeconds: 900
     }, null, 2),
     responseExamples: [
       {
@@ -1053,7 +1073,7 @@ export const PLAYGROUND_ENDPOINTS = [
     id: 'kyc-sessions-complete',
     tag: 'Integrator',
     title: 'Complete session',
-    description: 'Exchange result code for verification result. API key only.',
+    description: 'Exchange result code for a slim verification result. Full scores: webhook or GET /kyc/status. API key only.',
     method: 'POST',
     path: '/kyc/sessions/complete',
     auth: 'apiKeyOrClerk',
@@ -1061,9 +1081,26 @@ export const PLAYGROUND_ENDPOINTS = [
     responseExamples: [
       {
         status: 200, label: 'Approved',
-        body: { status: 'APPROVED', profileId: '672...', idVerification: { status: 'APPROVED' }, selfieVerification: { status: 'APPROVED' } }
+        body: { profileId: '672a9c2e3f1b2c4d5e6f7890', status: 'approved', integrationExternalRef: 'order-12345' }
       },
-      { status: 400, label: 'Invalid code', body: { error: 'Invalid or expired result code' } }
+      { status: 400, label: 'Invalid code', body: { status: 'failed', errors: [{ textCode: 'RESULT_CODE_INVALID' }] } }
+    ]
+  },
+  {
+    id: 'kyc-sessions-consent',
+    tag: 'Integrator',
+    title: 'Record capture consent',
+    description: 'Write capture token only. Purpose defaults to identity_verification.',
+    method: 'POST',
+    path: '/kyc/sessions/consent',
+    auth: 'apiKeyOrClerk',
+    body: JSON.stringify({ purpose: 'identity_verification' }, null, 2),
+    responseExamples: [
+      {
+        status: 200,
+        label: 'Recorded',
+        body: { ok: true, consentCapturedAt: '2026-09-18T20:00:00.000Z', consentPurpose: 'identity_verification' }
+      }
     ]
   },
   // ─── KYB ────────────────────────────────────────────────
@@ -1321,6 +1358,44 @@ export const PLAYGROUND_ENDPOINTS = [
     pathParams: [{ name: 'id', example: '682a....wh01' }],
     responseExamples: [
       { status: 200, label: 'Rotated', body: { webhook: { id: '682a....wh01' }, rawKey: '64-char-hex-shown-once' } }
+    ]
+  },
+  {
+    id: 'admin-videocall-queue',
+    tag: 'Admin',
+    title: 'Video Ident queue',
+    description: 'Waiting and in-call rooms (max 50). Clerk JWT only.',
+    method: 'GET',
+    path: '/admin/videocall/queue',
+    auth: 'clerk',
+    responseExamples: [
+      {
+        status: 200,
+        label: 'OK',
+        body: { queue: [{ sessionId: '672…', profileId: '672…', status: 'waiting', claimedBy: null }] }
+      }
+    ]
+  },
+  {
+    id: 'admin-videocall-claim',
+    tag: 'Admin',
+    title: 'Claim Video Ident session',
+    description: 'Atomic claim. Same agent can rejoin. Conflict returns VIDEOCALL_ALREADY_CLAIMED.',
+    method: 'POST',
+    path: '/admin/videocall/:id/claim',
+    auth: 'clerk',
+    pathParams: [{ name: 'id', example: '672a9c2e3f1b2c4d5e6f7891' }],
+    responseExamples: [
+      {
+        status: 200,
+        label: 'Claimed',
+        body: { sessionId: '672…', profileId: '672…', roomName: 'armith-vc-…', wsUrl: 'wss://…', token: 'eyJ…' }
+      },
+      {
+        status: 409,
+        label: 'Already claimed',
+        body: { status: 'failed', errors: [{ textCode: 'VIDEOCALL_ALREADY_CLAIMED', numericCode: 4316 }], claimedBy: 'user_abc' }
+      }
     ]
   }
 ];

@@ -44,6 +44,9 @@ User-facing messages and retry logic for each verification outcome.
 | `FACE_COVERAGE_LOW` | "Move closer so your face fills the frame." | Move closer |
 | `MULTIPLE_FACES` | "Only one face allowed. Remove others from frame." | Solo selfie |
 | `LIVENESS_FAILED` | "Please blink and move naturally during capture." | Retake with motion |
+| `BIOMETRIC_FACE_MATCH_UNAVAILABLE` | "Verification is temporarily unavailable. Please try again." | Vendor biometrics down — retry later |
+| `SANCTIONS_HIT` | Do not show details. | Compliance review |
+| `PEP_HIT` | "Under review — we'll notify you." | Wait for review |
 
 ### System Errors (Retryable)
 
@@ -62,7 +65,7 @@ User-facing messages and retry logic for each verification outcome.
 - `BLURRY_IMAGE`, `ADVERSARIAL_IMAGE_DETECTED`, `NO_FACE_DETECTED`
 - Ask user to retake photo
 
-### Business Rejections (1xxx, 2xxx, 4xxx, 7xxx, 8xxx)
+### Business Rejections (1xxx, 2xxx, 4xxx, 41xx, 43xx, 7xxx)
 **Allow user to retry with new images.**
 - Show specific reason
 - Let user upload new ID/selfie

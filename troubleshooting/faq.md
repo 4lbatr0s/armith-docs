@@ -12,7 +12,9 @@
 
 **Polling or webhooks?** Webhooks in production (`verification.completed`/`failed`); polling for backfill/debugging.
 
-**Where do I find my result?** `GET /kyc/status/:profileId` anytime; webhooks push terminal events.
+**Where do I find my result?** `GET /kyc/status/:profileId` anytime; webhooks push terminal events. Hosted `POST /kyc/sessions/complete` returns only `profileId`, lowercase `status`, and `integrationExternalRef`.
+
+**Is Video Ident part of hosted KYC?** No. Enable it separately and start from `/v/start` (or the SDK). Default mode is `agent_required` — Groq stills cannot auto-approve.
 
 **How do retries work?** Same `Idempotency-Key` + same body = cached response (no double charge). New images = new key.
 

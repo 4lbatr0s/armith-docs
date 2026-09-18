@@ -1,13 +1,16 @@
 openapi: 3.0.3
 info:
   title: Armith KYC API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Armith API-only KYC service.
 
     **Authentication:**
     - KYC routes accept `x-api-key: ak_live_…`, `Authorization: Bearer ak_live_…`, Clerk JWT, or `X-Verification-Session`.
     - Admin, config, and webhook management routes require Clerk dashboard JWT.
+    - v2 capture tokens (`scope=capture_write`) drive `/w/start`, `/m/start`, `/v/start`. Admin `POST /admin/verifications/{id}/capture-session` mints v1 **read-only** status tokens.
+
+    **Video Ident** is a separate product (default `decisionMode: agent_required`). Groq stills cannot auto-APPROVE.
 
     **Webhooks:** See product docs — multi-webhook HMAC signing uses SHA-256(rawKey) as HMAC key.
 
@@ -226,6 +229,15 @@ paths:
       responses:
         '200':
           description: Service healthy
+  /health/ready:
+    get:
+      tags: [Health]
+      summary: Readiness probe (Mongo, R2, Groq, Redis, biometrics)
+      responses:
+        '200':
+          description: All required checks ok or skipped
+        '503':
+          description: A required dependency failed (including vendor biometrics in production)
   /auth/status:
     get:
       tags: [Auth]
@@ -379,9 +391,13 @@ paths:
                   type: boolean
       responses:
         '200':
-          description: LiveKit wsUrl + applicant JWT
+          description: LiveKit wsUrl + applicant JWT + profileId
+        '400':
+          description: VIDEOCALL_CONSENT_REQUIRED or PROFILE_ID_REQUIRED
         '409':
-          description: VIDEOCALL_NOT_REQUIRED
+          description: VIDEOCALL_NOT_ENABLED or VIDEOCALL_KYC_REQUIRED
+        '503':
+          description: VIDEOCALL_NOT_CONFIGURED
   /kyc/videocall/heartbeat:
     post:
       tags: [KYC]
@@ -390,9 +406,19 @@ paths:
         - apiKeyAuth: []
         - bearerAuth: []
         - captureSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId]
+              properties:
+                sessionId:
+                  type: string
       responses:
         '200':
-          description: Session status
+          description: Session status including frameCount
   /kyc/videocall/frame:
     post:
       tags: [KYC]
@@ -401,20 +427,38 @@ paths:
         - apiKeyAuth: []
         - bearerAuth: []
         - captureSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId]
+              properties:
+                profileId:
+                  type: string
+                sessionId:
+                  type: string
+                frameImageUrl:
+                  type: string
+                frameDataUrl:
+                  type: string
       responses:
         '200':
           description: Running scores
   /kyc/videocall-check:
     post:
       tags: [KYC]
-      summary: Finalize Video Ident (thresholds + hybrid decision)
+      summary: Finalize Video Ident (server-gated; default agent_required)
       security:
         - apiKeyAuth: []
         - bearerAuth: []
         - captureSession: []
       responses:
         '200':
-          description: Videocall checkpoint result
+          description: Videocall checkpoint result (does not change KYC profile.status)
+        '409':
+          description: VIDEOCALL_NO_AGENT when no agent claimed and mode is not auto
   /kyc/status/{profileId}:
     get:
       tags: [KYC]
@@ -492,7 +536,7 @@ paths:
   '/admin/verifications/{profileId}/capture-session':
     post:
       tags: [Admin]
-      summary: Mint capture session token for embedded flows
+      summary: Mint v1 read-only capture session token (status poll only)
       security:
         - bearerAuth: []
       parameters:
@@ -503,7 +547,95 @@ paths:
             type: string
       responses:
         '200':
-          description: Token issued
+          description: Token issued (not a /w/start or /m/start write link)
+  /admin/videocall/queue:
+    get:
+      tags: [Admin]
+      summary: Waiting and in-call Video Ident rooms
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Queue payload (max 50)
+  '/admin/videocall/{profileId}/invite':
+    post:
+      tags: [Admin]
+      summary: Mint /v/start write token for Video Ident
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: token, expiresAtEpochSec, profileId, captureSessionId
+        '409':
+          description: VIDEOCALL_NOT_ENABLED or VIDEOCALL_KYC_REQUIRED
+  '/admin/videocall/{id}/claim':
+    post:
+      tags: [Admin]
+      summary: Atomically claim a Video Ident session
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent LiveKit JWT
+        '409':
+          description: VIDEOCALL_ALREADY_CLAIMED
+  '/admin/videocall/{id}/disposition':
+    post:
+      tags: [Admin]
+      summary: Agent approved or rejected disposition
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [disposition]
+              properties:
+                disposition:
+                  type: string
+                  enum: [approved, rejected]
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Videocall checkpoint result
+  '/admin/videocall/{id}/recording':
+    get:
+      tags: [Admin]
+      summary: Signed R2 recording URL
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signed URL (1h)
+        '404':
+          description: VIDEOCALL_RECORDING_FAILED
   /admin/stats:
     get:
       tags: [Admin]
@@ -815,9 +947,34 @@ paths:
   /kyc/profiles:
     post:
       tags: [Integrator]
-      summary: Create integrator profile and mint hosted redirect URL
+      summary: Create integrator profile and mint hosted redirect URL (v2 write token, ttl default 900s)
       security:
         - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [integrationExternalRef, returnUrl, state]
+              properties:
+                integrationExternalRef:
+                  type: string
+                countryCode:
+                  type: string
+                channel:
+                  type: string
+                  enum: [web, mobile]
+                returnUrl:
+                  type: string
+                state:
+                  type: string
+                ttlSeconds:
+                  type: integer
+                  minimum: 60
+                  maximum: 604800
+                workflowId:
+                  type: string
       responses:
         '201':
           description: Created
@@ -845,26 +1002,62 @@ paths:
       responses:
         '200':
           description: Session minted
+  /kyc/sessions/consent:
+    post:
+      tags: [Integrator]
+      summary: Record capture consent (write token only)
+      security:
+        - captureSession: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                purpose:
+                  type: string
+                  default: identity_verification
+      responses:
+        '200':
+          description: ok, consentCapturedAt, consentPurpose
   /kyc/sessions/complete:
     post:
       tags: [Integrator]
-      summary: Exchange a one-time result code
+      summary: Exchange a one-time result code (slim profileId + status + externalRef)
       security:
         - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                state:
+                  type: string
       responses:
         '200':
-          description: Profile status
+          description: Slim profile status
+        '400':
+          description: RESULT_CODE_INVALID
+        '503':
+          description: RESULT_CODE_STORE_UNAVAILABLE
   /kyc/sessions/result-code:
     post:
       tags: [Integrator]
-      summary: Mint a result code (write session; profile must be terminal)
+      summary: Mint a result code (write session; profile must be terminal; default TTL 900s)
       security:
         - captureSession: []
       responses:
         '200':
           description: Code issued
         '409':
-          description: Verification not terminal
+          description: RESULT_CODE_NOT_READY
+        '503':
+          description: RESULT_CODE_STORE_UNAVAILABLE
   /kyb/profiles:
     get:
       tags: [KYB]

@@ -10,7 +10,7 @@
 | IP allowlist rules | 24 CIDRs (account-wide) |
 | `integrationExternalRef` | 256 chars |
 | `integrationMetadata` | 20 keys, key ≤64, value ≤512, total ≤4 KB JSON |
-| Session TTL (`ttlSeconds`) | 60–604800 (default 3600) |
+| Session TTL (`ttlSeconds`) | 60–604800 (**default 900**) |
 | `X-Correlation-Id` | 128 chars |
 | Idempotency TTL | 24 h |
 | Sync verification | ~2–4 s per checkpoint (async has no hard timeout) |

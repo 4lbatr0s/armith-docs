@@ -17,3 +17,5 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/id-check" \
 | `under_review` | under_review | under_review | `UNDER_REVIEW` | — |
 
 **Checklist:** test happy path **and** each rejection (your UX copy), `Idempotency-Key` replay, full flow (upload → ID → selfie → status → webhook), error callbacks (`?error=cancelled/expired`) for hosted. Use `ak_test_` in all dev/CI pipelines — never `ak_live_` for tests.
+
+Video Ident has **no** `sandboxScenario`. LiveKit is stubbed only when `NODE_ENV` is `test` or `development`. Production Video Ident needs real LiveKit credentials.

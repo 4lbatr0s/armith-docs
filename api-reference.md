@@ -68,7 +68,7 @@ Optional on KYC writes: `Idempotency-Key: <unique>` (24h deduplication).
 Liveness probe with service metadata.
 
 ### <span class="armith-method armith-method-get">GET</span> `/health/ready`
-Readiness probe — checks MongoDB, R2, Groq connectivity.
+Readiness probe — MongoDB, R2, Groq, Redis, and vendor **biometrics** (`GET {PYTHON_BIOMETRICS_URL}/health`). Production fails closed if biometrics are required and missing.
 
 ### <span class="armith-method armith-method-get">GET</span> `/metrics`
 Prometheus metrics (when `METRICS_ENABLED=1`).
@@ -105,16 +105,22 @@ ID extraction + validation. Preflight blur/adversarial gates. Optional `integrat
 Face match + liveness checks. Requires `profileId` when both ID and selfie are mandatory. Supports `async` and `sandboxScenario`.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall/session`
-Mint a LiveKit applicant token for Video Ident. Requires recording consent. Only when Video Ident is enabled (`videocallEnabled`). By default KYC must already be `APPROVED` (`videocallRequiresKycApproved`). Does not affect KYC approval.
+Mint a LiveKit applicant token for Video Ident. Requires recording consent (`recordingConsent: true` or prior `POST /kyc/sessions/consent`). Only when Video Ident is enabled (`videocallEnabled`). By default KYC must already be `APPROVED` (`videocallRequiresKycApproved`). A write capture token without a bound profile can mint a PENDING shell only if that gate is **off**. Response includes `profileId`. Does not affect KYC approval.
+
+### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall/heartbeat`
+Applicant waiting-room heartbeat. Body `{ "sessionId" }` (required). Returns `frameCount`.
+
+### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall/frame`
+Score a live still (`frameImageUrl` or `frameDataUrl`). `sessionId` required.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall-check`
-Finalize Video Ident scores (`auto` / `hybrid` / `agent_required`). Server is the gate.
+Finalize Video Ident scores. Default `decisionMode` is `agent_required` — Groq stills cannot auto-`APPROVE`. Does not change KYC `profile.status`. 409 `VIDEOCALL_NO_AGENT` if no agent claimed and mode ≠ `auto`.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-check`
 **Preview.** eID NFC chip verification. Chip authenticity is client-attested until server NFC exists — do not treat as production-grade.
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/status/:profileId`
-Combined verification progress and checkpoint results (uppercase profile status).
+Combined verification progress and checkpoint results (uppercase profile status). Includes sibling `videocall` / `videocallVerification`. `progress.isFullyVerified` is ID + selfie + AML only.
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/sessions/:id`
 Alias for status endpoint (same handler).
@@ -130,7 +136,7 @@ LLM provider readiness and model info.
 API key only — these endpoints support the hosted capture flow.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/profiles`
-Create KYC profile + mint hosted capture redirect URL (v2). API key only.
+Create KYC profile + mint hosted capture redirect URL (v2 write token). API key only. Optional `workflowId`. `ttlSeconds` default **900**.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/hosted-sessions`
 One-shot hosted web capture session (defaults to `channel: web`). API key only.
@@ -138,11 +144,14 @@ One-shot hosted web capture session (defaults to `channel: web`). API key only.
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/profiles/:profileId/sessions`
 Mint additional capture session for existing profile. API key only.
 
+### <span class="armith-method armith-method-post">POST</span> `/kyc/sessions/consent`
+Record capture consent. Write capture token only. Body `{ "purpose" }` (default `identity_verification`). 200 `{ ok, consentCapturedAt, consentPurpose }`.
+
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/sessions/complete`
-Consume result code and return final KYC status. API key only.
+Exchange result `code` (+ optional `state`). Returns `{ profileId, status` (lowercase), `integrationExternalRef }`. Full scores: webhook or `GET /kyc/status`. API key only.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/sessions/result-code`
-Mint a result code during capture flow. Capture session auth.
+Mint a result code during capture flow. Write capture session auth. 409 `RESULT_CODE_NOT_READY` until terminal; 503 `RESULT_CODE_STORE_UNAVAILABLE` without Redis in production. Default TTL 900s.
 
 ## KYB
 
@@ -178,7 +187,17 @@ All require Clerk session authentication.
 | `GET` | `/admin/verifications/:profileId` | Full verification detail |
 | `GET` | `/admin/verifications/:profileId/events` | Timeline of lifecycle events |
 | `DELETE` | `/admin/verifications/:profileId` | Delete profile and artifacts |
-| `POST` | `/admin/verifications/:profileId/capture-session` | Mint capture session token |
+| `POST` | `/admin/verifications/:profileId/capture-session` | Mint **v1 read-only** status token (`X-Verification-Session`). Not a `/w/start` / `/m/start` write link. |
+
+### Video Ident desk
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/admin/videocall/:profileId/invite` | Mint `/v/start` write token |
+| `GET` | `/admin/videocall/queue` | Waiting + in-call rooms (max 50) |
+| `POST` | `/admin/videocall/:id/claim` | Atomic claim. 409 `VIDEOCALL_ALREADY_CLAIMED` |
+| `POST` | `/admin/videocall/:id/disposition` | `{ disposition: "approved" \| "rejected", notes? }` |
+| `GET` | `/admin/videocall/:id/recording` | Signed R2 URL (1h) |
 
 ### Stats & Analytics
 
