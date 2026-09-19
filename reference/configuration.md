@@ -40,7 +40,8 @@ curl -X POST "https://armith-backend-live.onrender.com/config/preset" \
 | `maxDeepfakeRisk` | 0.25 | Max injection / deepfake risk on the live still |
 | `minCallQualityScore` | 0.45 | Resolution / freeze floor |
 | `minDurationSeconds` | 45 | Reject drive-by joins |
-| `videocallDecisionMode` | `hybrid` | `hybrid` · `auto` · `agent_required` (human in the loop; not a certification) |
+| `minFrameCount` | 3 | Minimum scored live frames before Video Ident can approve |
+| `videocallDecisionMode` | `agent_required` | `agent_required` (default, fail-closed) · `hybrid` · `auto`. Groq stills cannot auto-`APPROVE`. |
 | `minAge` / `maxAge` / `enforceAgeCheck` | 18 / 120 / true | Age rules |
 | Verification steps | ID + selfie | Require ID / selfie / AML. Video Ident is `videocallEnabled` (product on/off; not a KYC step). `videocallRequiresKycApproved` (default on) gates Video Ident on KYC `APPROVED`. |
 
@@ -50,7 +51,7 @@ Changes apply immediately to new verifications.
 
 ## Advanced (`PATCH /config`, Clerk + optimistic locking)
 
-`idCardThresholds.minOverallConfidence`, `maxTamperingRisk` · `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles` · `videocallThresholds` (`decisionMode`, `requireAgentConfirmation`, `requireDocumentOnCamera`, auto-review match band, `maxQueueWaitSeconds`) · `validationRules` (TC checksum, MRZ cross-check, `maxWarningCount` default 3, expiry, `warningEscalationStatus`) · `verificationFeatures` (`videocallEnabled` default off, `videocallRequiresKycApproved` default on, auto-review bands, `riskScoreCeiling` default 55) · `adapters` (screening/face/liveness provider).
+`idCardThresholds.minOverallConfidence`, `maxTamperingRisk` · `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles` · `videocallThresholds` (`decisionMode` default `agent_required`, `requireAgentConfirmation` default true, `minFrameCount` default 3, `requireDocumentOnCamera`, auto-review match band, `maxQueueWaitSeconds`) · `validationRules` (TC checksum, MRZ cross-check, `maxWarningCount` default 3, expiry, `warningEscalationStatus`) · `verificationFeatures` (`videocallEnabled` default off, `videocallRequiresKycApproved` default on, auto-review bands, `riskScoreCeiling` default 55) · `adapters` (screening/face/liveness provider). Production selfie match/liveness uses vendor biometrics (`FACE_MATCH_PROVIDER` / `LIVENESS_PROVIDER`); LLM scores are shadow only.
 
 **Auto-review → `UNDER_REVIEW`:** warnings ≥ `maxWarningCount`, risk > `riskScoreCeiling`, or borderline confidence/spoofing bands. Webhook: `verification.manual_review_queued`.
 

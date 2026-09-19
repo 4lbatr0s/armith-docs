@@ -63,6 +63,7 @@ Quick reference for Armith-specific terms.
 | Term | Definition |
 |------|------------|
 | **Preflight** | Deterministic image checks (URL validation, adversarial scan, blur detection, face likelihood) — runs BEFORE LLM |
+| **Vendor biometrics** | Production face-match (SFace) + PAD host. Required in production; LLM match/liveness is shadow-only. |
 | **LLM** | Groq vision model (`meta-llama/llama-4-scout-17b-16e-instruct`) that extracts structured data from images |
 | **Thresholds** | Configurable pass/fail bars (confidence minimums, risk maximums, quality floors) |
 | **Country Validator** | Deterministic server-side rules per country (e.g., Turkish TC checksum, MRZ cross-check) |
@@ -97,7 +98,7 @@ Quick reference for Armith-specific terms.
 | Term | Definition |
 |------|------------|
 | **Text Code** | Human-readable error code (e.g., `BLURRY_IMAGE`, `LOW_MATCH_CONFIDENCE`) |
-| **Numeric Code** | Machine-readable code family (1xxx=missing data, 2xxx=invalid data, 3xxx=quality, 4xxx=selfie, 5xxx=system, 6xxx=flow, 7xxx=eID, 8xxx=screening) |
+| **Numeric Code** | Machine-readable code family (1xxx=missing data, 2xxx=invalid data, 3xxx=quality, 4xxx=selfie, 41xx=AML, 43xx=Video Ident, 5xxx=system, 6xxx=flow, 7xxx=eID) |
 | **Preflight Failure** | Errors from deterministic checks (3001 `BLURRY_IMAGE`, 3008 `ADVERSARIAL_IMAGE_DETECTED`) — do not retry same image |
 
 ---

@@ -153,6 +153,8 @@ POST https://armith-backend-live.onrender.com/kyc/selfie-check
 
 > Selfie fails on: low match, spoofing, no face, poor quality, bad lighting, angle issues.
 
+In production, vendor face-match and PAD scores are **authoritative**. Groq vision still runs as a shadow signal. PAD below `PAD_MIN_SCORE` (default 0.45) → `SPOOFING_DETECTED`. Missing required vendor host → `BIOMETRIC_FACE_MATCH_UNAVAILABLE` / `BIOMETRIC_LIVENESS_UNAVAILABLE` (fail closed, no LLM fallback).
+
 ---
 
 ## Multiple Selfies

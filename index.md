@@ -49,7 +49,7 @@ const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
   </a>
   <a class="armith-api-card" href="/concepts/how-it-works">
     <span class="armith-api-card-title">🧠 How it works</span>
-    <span class="armith-api-card-desc">Preflight → LLM → server decision, in one diagram.</span>
+    <span class="armith-api-card-desc">Preflight → LLM → vendor biometrics + server rules.</span>
   </a>
 </div>
 
@@ -72,11 +72,12 @@ const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
 
 ## Capabilities
 
-- ID + selfie + eID NFC verification (Groq vision + deterministic server rules)
+- ID + selfie verification (Groq vision + deterministic server rules; production face-match/PAD via vendor biometrics)
+- Separate **Video Ident** product (`/v/start`) — fail-closed, agent-required by default
 - Preflight quality gates (blur, adversarial, face) before any LLM call
 - Hosted capture pages (`/w/start`, `/m/start`) + React Native SDK
 - Webhooks with HMAC signing + multi-endpoint fan-out
-- KYB entity records (manual), AML/sanctions/PEP screening
+- KYB entity records (manual, preview), AML/sanctions/PEP screening, eID NFC (preview)
 - Async (BullMQ) processing, sandbox fixtures, manual review queue
 - Configurable thresholds + presets (`strict` / `balanced` / `lenient`), GDPR tooling
 

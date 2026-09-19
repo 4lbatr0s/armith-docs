@@ -20,7 +20,7 @@ or
 Authorization: Bearer ak_live_abc123
 ```
 
-**Works on:** all `/kyc/*` endpoints + integrator session endpoints (`POST /kyc/profiles`, `/kyc/hosted-sessions`, `/kyc/profiles/:id/sessions`, `/kyc/sessions/complete`, `/kyc/sessions/result-code`).
+**Works on:** all `/kyc/*` endpoints + integrator session endpoints (`POST /kyc/profiles`, `/kyc/hosted-sessions`, `/kyc/profiles/:id/sessions`, `/kyc/sessions/complete`). `POST /kyc/sessions/result-code` and `POST /kyc/sessions/consent` require a **write** capture token, not an API key.
 **Does NOT work on:** `/admin/*`, `/config` (except public presets), `/auth/profile` — those need Clerk.
 
 **Create:** Dashboard → **Integrations → API Keys** → name it (`prod-backend`), pick environment, copy once, store in secrets manager. **Never ship keys in browser/mobile bundles.**
@@ -45,7 +45,9 @@ Your backend mints it, the end-user's browser/app sends it — so you never expo
 X-Verification-Session: <token>
 ```
 
-Mint: `POST /admin/verifications/:profileId/capture-session` (write-scoped for `/m/start`, `/w/start`, RN SDK). Auth priority on KYC routes: capture session → API key → Clerk. **Use API keys from your backend whenever you have a backend.**
+Mint **write** tokens from your backend: `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions` (v2 `scope=capture_write`, `t=` on `/w/start`, `/m/start`, `/v/start`). Dashboard **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) is **v1 read-only** — poll `GET /kyc/status` only (`403 CAPTURE_SESSION_READ_ONLY` on writes).
+
+Auth priority on KYC routes: capture session → API key → Clerk. **Use API keys from your backend whenever you have a backend.**
 
 ---
 
@@ -57,7 +59,7 @@ Mint: `POST /admin/verifications/:profileId/capture-session` (write-scoped for `
 
 ## Idempotency (Avoid Double Charges on Retry)
 
-On `POST /kyc/id-check`, `/selfie-check`, `/eid-check`:
+On `POST /kyc/id-check`, `/selfie-check`, `/eid-check`, `/videocall-check`:
 ```http
 Idempotency-Key: id-check-order-123-attempt-1
 ```

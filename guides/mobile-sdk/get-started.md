@@ -41,11 +41,11 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/profiles" \
     "channel": "mobile",
     "returnUrl": "yourapp://kyc/callback",
     "state": "opaque-state-abc123",
-    "ttlSeconds": 3600
+    "ttlSeconds": 900
   }'
 ```
 
-Response `redirectUrl` looks like `https://armith.onrender.com/m/start?t=<token>`.
+Response `redirectUrl` looks like `https://armith.onrender.com/m/start?t=<token>`. Capture TTL defaults to **900 seconds**. Production `redirectUrl` hosts must be **HTTPS** (`SESSION_INVALID` otherwise).
 
 ---
 
@@ -88,13 +88,13 @@ const { returnUrl } = await kyc.completeAndRedirect();
 | Method | Does |
 |--------|------|
 | `getSupportedCountries(apiBaseUrl)` | `GET /kyc/countries` |
-| `openSessionUrl(url)` | Parse `/m/start`, `/w/start`, or `/v/start`; store write token |
+| `openSessionUrl(url)` | Parse `/m/start`, `/w/start`, or `/v/start`; store write token (`scope=capture_write`) |
 | `openVideocallInviteUrl(url)` | Parse `/v/start` invite (skips `expectedChannel`; dashboard invites are web) |
 | `startIdVerification(input)` | Presign → upload → `id-check` |
 | `startSelfieVerification(input)` | Presign → upload → `selfie-check` |
-| `startVideocallSession(recordingConsent?)` | Mint LiveKit applicant JWT (`POST /kyc/videocall/session`). Independent of KYC approval; tenant must enable Video Ident. Join the room with `@livekit/react-native`. |
+| `startVideocallSession(recordingConsent?)` | Mint LiveKit applicant JWT (`POST /kyc/videocall/session`). Capture token is enough — `profileId` is optional; the API may bind a PENDING shell and return `profileId`. Still subject to `videocallRequiresKycApproved`. Join the room with `@livekit/react-native` using `{ wsUrl, token, sessionId, profileId }`. |
 | `videocallHeartbeat(sessionId)` | Applicant still waiting |
-| `submitVideocallFrame(input)` | Groq still (`frameImageUrl` or `frameDataUrl`) |
+| `submitVideocallFrame(input)` | Groq still (`frameImageUrl` or `frameDataUrl`). Needs bound `profileId` after session start. |
 | `finalizeVideocall(sessionId?)` | `POST /kyc/videocall-check` |
 | `pollStatus(options?)` | Poll `GET /kyc/status/:profileId` |
 | `completeAndRedirect()` | Mint result code + build `returnUrl` |
@@ -120,10 +120,11 @@ The screens return `{ uri, mimeType }` — feed straight into the headless SDK.
 
 ## Rules
 
-- Session tokens are **write-scoped, short-lived, bound to one profile**.
+- Session tokens are **write-scoped, short-lived**. `pid` may be absent until ID-front binds a profile (or Video Ident mints a shell).
 - Result codes mintable only after terminal status (`APPROVED`, `REJECTED`, `FAILED`, `UNDER_REVIEW`).
 - **Never ship `ak_live_*` in the app binary.** All API-key calls go through your backend.
-- Test with `ak_test_*` + `sandboxScenario: 'approved'`.
+- Test with `ak_test_*` + `sandboxScenario: 'approved'`. There are **no** Video Ident sandbox scenarios.
+- SDK `source`: `'server'` (backend `textCode`) vs `'sdk'` (`SESSION_INVALID`, `SESSION_EXPIRED`, `CHANNEL_MISMATCH`, `INVALID_CONFIG`).
 
 ```bash
 # Run SDK tests from the armith repo

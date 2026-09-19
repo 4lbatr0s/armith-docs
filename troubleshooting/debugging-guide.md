@@ -19,6 +19,8 @@ Same flow with `ak_test_` + `sandboxScenario`. If sandbox works but live fails �
 | Images | ≤10 MB, JPEG/PNG/WebP, ≥1 MP, sharp, face centered |
 | Flow | `id-check` before `selfie-check`? `profileId` threaded through? Country supported? |
 | Quota | `429 PLAN_LIMIT_REACHED`? |
+| Video Ident | Product enabled? KYC gate? Agent claimed? ≥3 scored frames? LiveKit configured? |
+| Biometrics | Production `GET /health/ready` includes `biometrics`? `REQUIRE_VENDOR_BIOMETRICS=1`? |
 | Webhooks | Signature (raw bytes, skew ≤300 s), 2xx fast response, delivery log `?failedOnly` |
 | Async | Polling terminal status before minting result code? Queue health at `/ops/queues`? |
 

@@ -78,6 +78,14 @@ GET https://armith-backend-live.onrender.com/kyc/status/:profileId
     "sanctionsMatch": false,
     "pepMatch": false
   },
+  "videocall": {
+    "enabled": false,
+    "requiresKycApproved": true,
+    "status": null,
+    "completed": false,
+    "approved": false,
+    "sessionId": null
+  },
   "thresholds": {
     "matchConfidence": 92,
     "spoofingRiskMax": 0.25,
@@ -134,6 +142,7 @@ Each step has:
 **Selfie Verification** — match confidence, spoofing risk, liveness, quality
 **eID NFC Verification** — chip auth, SOD validity, data match, combined score
 **Screening** — status, provider, matches, hits
+**Video Ident** — sibling `videocall` + `videocallVerification` (does not affect `progress.isFullyVerified` or KYC `status`)
 
 ### Thresholds Snapshot
 

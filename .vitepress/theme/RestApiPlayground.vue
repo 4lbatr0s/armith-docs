@@ -98,6 +98,8 @@ function authNote(ep) {
   if (ep.auth === 'none') return 'No authentication required.';
   if (ep.auth === 'clerk')
     return 'Requires a Clerk session JWT in Authorization Bearer. API keys are not accepted on this route.';
+  if (ep.auth === 'captureWrite')
+    return 'Requires a v2 write capture token in X-Verification-Session. API keys and Clerk JWTs are rejected.';
   return 'Use x-api-key (recommended) or Authorization Bearer ak_live_… for API keys. Use Bearer with a Clerk JWT for dashboard session.';
 }
 
