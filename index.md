@@ -28,27 +28,27 @@ const appUrl = import.meta.env.VITE_APP_URL || 'https://armith.onrender.com';
 
 <div class="armith-api-grid">
   <a class="armith-api-card" href="/quickstart">
-    <span class="armith-api-card-title">⚡ Quickstart (5 min)</span>
+    <span class="armith-api-card-title">01 — Quickstart</span>
     <span class="armith-api-card-desc">Get verified fast — REST, hosted, or mobile in one page.</span>
   </a>
   <a class="armith-api-card" href="/guides/rest-api/get-started">
-    <span class="armith-api-card-title">🔌 REST API</span>
+    <span class="armith-api-card-title">02 — REST API</span>
     <span class="armith-api-card-desc">Custom upload UI, any backend language. Full control.</span>
   </a>
   <a class="armith-api-card" href="/guides/hosted-capture/get-started">
-    <span class="armith-api-card-title">🖥️ Hosted Capture</span>
+    <span class="armith-api-card-title">03 — Hosted Capture</span>
     <span class="armith-api-card-desc">Redirect flow — Armith hosts the ID + selfie UI.</span>
   </a>
   <a class="armith-api-card" href="/guides/mobile-sdk/get-started">
-    <span class="armith-api-card-title">📱 Mobile SDK</span>
+    <span class="armith-api-card-title">04 — Mobile SDK</span>
     <span class="armith-api-card-desc">Native in-app KYC for React Native.</span>
   </a>
   <a class="armith-api-card" href="/guides/webhooks/get-started">
-    <span class="armith-api-card-title">🔔 Webhooks</span>
+    <span class="armith-api-card-title">05 — Webhooks</span>
     <span class="armith-api-card-desc">Real-time results with HMAC-signed delivery.</span>
   </a>
   <a class="armith-api-card" href="/concepts/how-it-works">
-    <span class="armith-api-card-title">🧠 How it works</span>
+    <span class="armith-api-card-title">06 — How it works</span>
     <span class="armith-api-card-desc">Preflight → LLM → vendor biometrics + server rules.</span>
   </a>
 </div>

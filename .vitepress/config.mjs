@@ -14,7 +14,7 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     ['link', { rel: 'canonical', href: 'https://armith-docs-standalone.onrender.com/' }],
-    ['meta', { name: 'theme-color', content: '#059669' }],
+    ['meta', { name: 'theme-color', content: '#1B2A4A' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:url', content: 'https://armith-docs-standalone.onrender.com/' }],
     ['meta', { property: 'og:title', content: 'Armith Docs — KYC API, hosted capture, React Native SDK' }],
@@ -34,7 +34,7 @@ export default defineConfig({
       'link',
       {
         rel: 'stylesheet',
-        href: 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700;800&display=swap'
+        href: 'https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap'
       }
     ]
   ],
