@@ -14,8 +14,8 @@
   --armith-surface: #FFF7EC;
   --armith-ink: #1B2A4A;
   --armith-text: #1B2A4A;
-  --armith-text-secondary: #767C8B;
-  --armith-text-tertiary: #9AA0AE;
+  --armith-text-secondary: #5F677B;
+  --armith-text-tertiary: #667085;
 
   /* Fixed accent roles */
   --armith-coral: #FF6B4A;
@@ -36,8 +36,8 @@
   --armith-teal: var(--armith-sage);
 
   /* Hairlines derive from ink; no soft elevation in the docs shell. */
-  --armith-border: rgba(27, 42, 74, 0.18);
-  --armith-border-strong: rgba(27, 42, 74, 0.38);
+  --armith-border: rgba(27, 42, 74, 0.26);
+  --armith-border-strong: rgba(27, 42, 74, 0.50);
   --armith-shadow-xs: none;
   --armith-shadow-sm: none;
   --armith-shadow-md: none;
@@ -70,8 +70,8 @@
   --armith-green-border: var(--armith-accent-border);
   --armith-teal: var(--armith-sage);
 
-  --armith-border: rgba(255, 247, 236, 0.18);
-  --armith-border-strong: rgba(255, 247, 236, 0.36);
+  --armith-border: rgba(255, 247, 236, 0.26);
+  --armith-border-strong: rgba(255, 247, 236, 0.44);
   --armith-shadow-xs: none;
   --armith-shadow-sm: none;
   --armith-shadow-md: none;
@@ -1377,8 +1377,17 @@ textarea,
 
 .armith-api-card:hover {
   border-color: var(--armith-coral);
+  background: var(--armith-wash);
   box-shadow: none;
   transform: none;
+}
+
+.armith-api-card:hover .armith-api-card-title {
+  color: var(--armith-coral-deep);
+}
+
+.dark .armith-api-card:hover .armith-api-card-title {
+  color: var(--armith-coral);
 }
 
 .armith-kicker {
