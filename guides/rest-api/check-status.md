@@ -26,58 +26,55 @@ GET https://armith-backend-live.onrender.com/kyc/status/:profileId
 
 ```json
 {
+  "id": "672a9c2e3f1b2c4d5e6f7890",
   "status": "APPROVED",
-  "profileId": "672a9c2e3f1b2c4d5e6f7890",
   "country": "TR",
+  "createdAt": "2026-06-01T11:58:12.000Z",
+  "rejectionReasons": [],
+  "workflowId": null,
+  "packs": [],
+  "verificationRules": { "requireIdCard": true, "requireSelfie": true, "requireAml": false, "requireVideocall": false },
   "session": {
-    "lifecycle": "approved"
+    "id": "672a9c2e3f1b2c4d5e6f7890",
+    "lifecycle": { "phase": "approved", "terminal": true },
+    "correlationId": "5b0c2f0e-..."
   },
   "progress": {
-    "idVerification": {
-      "required": true,
-      "completed": true,
-      "approved": true
-    },
-    "selfieVerification": {
-      "required": true,
-      "completed": true,
-      "approved": true
-    },
-    "screening": {
-      "required": false,
-      "completed": true,
-      "approved": true
-    },
+    "idVerification": { "required": true, "completed": true, "approved": true },
+    "selfieVerification": { "required": true, "completed": true, "approved": true },
     "isFullyVerified": true
   },
   "idVerification": {
     "status": "APPROVED",
-    "fullName": "Ada Lovelace",
-    "firstName": "Ada",
-    "lastName": "Lovelace",
-    "identityNumber": "12345678901",
-    "dateOfBirth": "1990-01-01",
-    "expiryDate": "2030-01-01",
-    "nationality": "TUR",
-    "documentType": "id_card",
-    "overallConfidence": 0.95,
-    "confidenceScores": {...},
-    "rejectionReasons": []
+    "data": {
+      "fullName": "Ada Lovelace",
+      "firstName": "Ada",
+      "lastName": "Lovelace",
+      "identityNumber": "12345678901",
+      "dateOfBirth": "1990-01-01",
+      "expiryDate": "2030-01-01",
+      "nationality": "TUR",
+      "readabilityIssues": []
+    },
+    "confidence": { "overallConfidence": 0.95, "imageQuality": 0.9, "tamperingRisk": 0.02 },
+    "confidenceScores": [...],
+    "rejectionReasons": [],
+    "errors": []
   },
   "selfieVerification": {
     "status": "APPROVED",
-    "matchConfidence": 96,
-    "spoofingRisk": 0.03,
-    "livenessConfidence": 0.94,
-    "faceQuality": 0.89
+    "data": {
+      "isMatch": true,
+      "matchConfidence": 96,
+      "spoofingRisk": 0.03,
+      "livenessConfidence": 0.94,
+      "imageQuality": 0.89
+    },
+    "confidenceScores": [...],
+    "rejectionReasons": [],
+    "errors": []
   },
-  "screening": {
-    "status": "clear",
-    "provider": "opensanctions",
-    "screenedAt": "2026-06-01T12:00:00Z",
-    "sanctionsMatch": false,
-    "pepMatch": false
-  },
+  "screening": null,
   "videocall": {
     "enabled": false,
     "requiresKycApproved": true,
@@ -86,20 +83,15 @@ GET https://armith-backend-live.onrender.com/kyc/status/:profileId
     "approved": false,
     "sessionId": null
   },
-  "thresholds": {
-    "matchConfidence": 92,
-    "spoofingRiskMax": 0.25,
-    "fullNameConfidence": 0.80,
-    "idMinCaptureSharpness": 0.38
-  },
   "images": {
     "idFront": "https://...",
     "idBack": "https://...",
-    "selfie": "https://...",
-    "portrait": "https://..."
+    "selfie": "https://..."
   }
 }
 ```
+
+> `screening` is `null` unless AML is required; when present it carries `status`, `provider`, `screenedAt`, `sanctionsMatch`, `pepMatch`, `skipped`, `reason` and `hits[]`. It is **not** part of `progress`: while AML is `pending` (or `unavailable`/`misconfigured`), `isFullyVerified` stays `false`. `evidence` and `thresholds` (your pass/fail bars) are only returned to API-key callers, never to end-user capture sessions.
 
 ---
 
@@ -115,7 +107,7 @@ GET https://armith-backend-live.onrender.com/kyc/status/:profileId
 | `FAILED` | System error |
 | `UNDER_REVIEW` | Manual review queue |
 
-### Session Lifecycle
+### Session Lifecycle (`session.lifecycle.phase`; `session.lifecycle.terminal` is `true` once no further polling is useful)
 
 | Value | Meaning |
 |-------|---------|

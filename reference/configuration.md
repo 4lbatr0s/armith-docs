@@ -32,7 +32,7 @@ curl -X POST "https://armith-backend-live.onrender.com/config/preset" \
 | `dateOfBirthConfidence` / `expiryDateConfidence` | 0.85 | DOB / expiry floors |
 | `minMrzConfidence` | 0.80 | MRZ read floor |
 | `idMinImageQuality` / `selfieMinImageQuality` | 0.62 | LLM quality floors |
-| `idMinCaptureSharpness` / `selfieMinCaptureSharpness` | 0.38 | Preflight blur gates — lower = stricter |
+| `idMinCaptureSharpness` / `selfieMinCaptureSharpness` | 0.38 | Preflight blur gates — **higher = stricter** (an image scoring below the gate is rejected as `BLURRY_IMAGE`) |
 | `minDocumentVitalityConfidence` | 0.55 | Document liveness |
 | `faceDetectionConfidence` / `minLivenessConfidence` | 0.78 | Face + liveness floors |
 | `minLiveMatchConfidence` | 92 (0–100) | Live Video Ident face vs ID portrait |
@@ -49,7 +49,11 @@ Changes apply immediately to new verifications.
 
 ---
 
-## Advanced (`PATCH /config`, Clerk + optimistic locking)
+## Advanced (`PATCH /config`, Clerk)
+
+Send only the sections you change. Supported top-level fields: `name`, `description`, `isActive`, `verificationSteps`, `idCardThresholds`, `selfieThresholds`, `validationRules`, `customThresholds`, `adapters`, `verificationFeatures`, `videocallThresholds`, `version`. Unknown fields (for example `steps`, which belongs to [`PUT /admin/workflows`](/advanced/custom-workflows)) are rejected with `400 UNKNOWN_CONFIG_FIELDS` instead of being silently ignored.
+
+**Optimistic locking is opt-in:** include the `version` you last read; if the stored version differs you get `409 CONFIG_VERSION_CONFLICT`. Omit `version` and the last write wins, so send it whenever more than one admin edits settings. Writes need the `admin` organization role.
 
 `idCardThresholds.minOverallConfidence`, `maxTamperingRisk` · `selfieThresholds.requiredFaceCount`, `minAngleDifference`, `requireMultipleAngles` · `videocallThresholds` (`decisionMode` default `agent_required`, `requireAgentConfirmation` default true, `minFrameCount` default 3, `requireDocumentOnCamera`, auto-review match band, `maxQueueWaitSeconds`) · `validationRules` (TC checksum, MRZ cross-check, `maxWarningCount` default 3, expiry, `warningEscalationStatus`) · `verificationFeatures` (`videocallEnabled` default off, `videocallRequiresKycApproved` default on, auto-review bands, `riskScoreCeiling` default 55) · `adapters` (screening/face/liveness provider). Production selfie match/liveness uses vendor biometrics (`FACE_MATCH_PROVIDER` / `LIVENESS_PROVIDER`); LLM scores are shadow only.
 

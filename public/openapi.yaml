@@ -633,7 +633,7 @@ paths:
             type: string
       responses:
         '200':
-          description: Signed URL (1h)
+          description: Signed URL (5 min; every access is audited as videocall.recording_access)
         '404':
           description: VIDEOCALL_RECORDING_FAILED
   /admin/stats:
@@ -684,6 +684,93 @@ paths:
       responses:
         '200':
           description: Settings reset
+  /admin/settings/preview:
+    post:
+      tags: [Admin]
+      summary: What-if replay of a threshold change against recent traffic (no LLM, nothing saved)
+      description: >
+        Replays stored per-field scores of the tenant's latest validations against the current and the
+        proposed thresholds and returns projected outcome counts, the cases that would flip, and a
+        `fidelity` score (how often replaying the CURRENT thresholds reproduces the stored status).
+        Requires the `admin` organization role.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [thresholds]
+              properties:
+                thresholds:
+                  $ref: '#/components/schemas/FlatThresholds'
+                days:
+                  type: integer
+                  minimum: 1
+                  maximum: 90
+                  default: 30
+                limit:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+                  default: 300
+      responses:
+        '200':
+          description: Projected deltas for ID and selfie checks
+        '400':
+          description: Unsupported/invalid threshold override
+  '/admin/verifications/{profileId}/briefing':
+    get:
+      tags: [Admin]
+      summary: Advisory reviewer briefing for a case (deterministic)
+      description: >
+        Why the case is in review, borderline metrics, conflicting signals (incl. exact media reuse across
+        applications), SLA state and a suggested action. Advisory only. Requires the `reviewer` role.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "{ briefing: { recommendation, reasons, conflicts, borderline, related, sla } }"
+        '404':
+          description: Profile not found in this tenant
+  /admin/analytics:
+    get:
+      tags: [Admin]
+      summary: Outcome funnel, daily time series, top rejection reasons and anomaly flags
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema: { type: string, format: date }
+        - name: dateTo
+          in: query
+          schema: { type: string, format: date }
+        - name: days
+          in: query
+          description: Used when dateFrom/dateTo are absent (1-90, default 30)
+          schema: { type: integer }
+      responses:
+        '200':
+          description: >
+            { periodDays, dateFrom, dateTo, statusBreakdown, funnel, webhookDeliveries, timeSeries[],
+            topRejectionReasons[], anomalies{ reasonSpikes[], approvalDrop } }
+  /kyb/stats:
+    get:
+      tags: [KYB]
+      summary: Case counts by status
+      security:
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: "{ totalCases, approvedCount, pendingCount, rejectedCount, underReviewCount }"
   /admin/api-keys:
     get:
       tags: [Admin]
