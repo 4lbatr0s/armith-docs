@@ -29,6 +29,8 @@ curl -X POST "$BASE/kyc/eid-check" -H "x-api-key: $KEY" -H "Content-Type: applic
 2. **DG1.** The chip's copy of the MRZ is parsed and its check digits verified.
 3. **Chip vs. card.** DG1 is compared with the profile (card face): serial number, TC Kimlik No (from the MRZ optional field), date of birth, expiry date and name. The document must not be expired.
 
+   The chip must be **bound to the person**: at least a document identifier (serial or TC number), the date of birth and a name must have been compared. Run the ID-card check first so the profile has them. A profile with too little card-face data cannot be approved from a chip alone (`VISUAL_DATA_MISSING`, `UNDER_REVIEW`), because a genuine chip of anyone would otherwise match "nothing".
+
 Passive Authentication proves the data is what the issuing country signed. It **cannot detect a cloned chip** (genuine data copied to another chip). Until Active/Chip Authentication is supported, a result that passes every check is `UNDER_REVIEW` with `CLONE_DETECTION_NOT_PERFORMED`. An operator who accepts that risk can set `EID_ALLOW_PASSIVE_ONLY=1` to get `APPROVED`.
 
 ## Response
@@ -57,7 +59,7 @@ The response never contains personal data: errors name a code and, for mismatche
 | Status | When |
 |---|---|
 | `APPROVED` | Every check passes **and** passive-only is allowed (`EID_ALLOW_PASSIVE_ONLY=1`). |
-| `UNDER_REVIEW` | All checks pass but clone detection was not performed, **or** no CSCA trust anchors are configured (`NO_TRUST_ANCHORS`, a configuration gap, not the applicant's fault). |
+| `UNDER_REVIEW` | All checks pass but clone detection was not performed, **or** the profile has too little card-face data to bind the chip to the person (`VISUAL_DATA_MISSING`), **or** no CSCA trust anchors are configured (`NO_TRUST_ANCHORS`, a configuration gap, not the applicant's fault). |
 | `REJECTED` | Evidence of tampering or a different person: `SOD_SIGNATURE_INVALID`, `SOD_CHAIN_UNTRUSTED`, `DG_HASH_MISMATCH`, `DG_NOT_IN_SOD`, `MRZ_CHECK_DIGIT_INVALID`, `CHIP_VISUAL_MISMATCH`, `DOCUMENT_EXPIRED`. |
 | `FAILED` | A bad read; ask the user to tap again: `SOD_MALFORMED`, `DG1_MALFORMED`, `DG_MISSING_REQUIRED`. Malformed uploads are a `400` (`MISSING_CHIP_DATA`, `CHIP_PAYLOAD_INVALID`). |
 
