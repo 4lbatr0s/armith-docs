@@ -96,6 +96,7 @@ export default defineConfig({
           { text: 'REST API — Check Status', link: '/guides/rest-api/check-status' },
           { text: 'REST API — Handle Results', link: '/guides/rest-api/handle-results' },
           { text: 'Hosted Capture', link: '/guides/hosted-capture/get-started' },
+          { text: 'Web SDK', link: '/guides/hosted-capture/web-sdk' },
           { text: 'Mobile SDK', link: '/guides/mobile-sdk/get-started' },
           { text: 'Webhooks', link: '/guides/webhooks/get-started' },
           { text: 'Server SDKs', link: '/guides/sdks' },
@@ -130,7 +131,8 @@ export default defineConfig({
           { text: 'Manual Review', link: '/advanced/manual-review' },
           { text: 'Data Rights (GDPR)', link: '/advanced/data-subject-rights' },
           { text: 'Security and compliance', link: '/advanced/security-and-compliance' },
-          { text: 'Audit and four-eyes', link: '/advanced/audit-and-review' }
+          { text: 'Audit and four-eyes', link: '/advanced/audit-and-review' },
+          { text: 'Policy rules', link: '/advanced/policy-rules' }
         ]
       },
       {
