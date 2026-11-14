@@ -14,10 +14,14 @@
 |---------|------|-----------|
 | Blurry images reaching LLM | `idMinCaptureSharpness` / `selfieMinCaptureSharpness` | Raise (0.38 → 0.42 = stricter) |
 | Good users failing on slight blur | Same | Lower (→ 0.32) **or** fix capture UX first |
-| Strangers passing face match | `matchConfidence` | Raise (92 → 95+) |
+| Strangers passing face match | `matchConfidence` (LLM fallback, 0-100) or `minFaceMatchCosine` (biometric service) | Raise (92 → 95+) / (0.363 → 0.45+) |
 | Too many `UNDER_REVIEW` | `riskScoreCeiling` (def. 55), auto-review bands | Raise ceiling / widen bands |
 | Too many hard rejects | Preset | `lenient` |
 | Risky docs passing | Preset / `maxTamperingRisk` | `strict` / lower ceiling |
+
+## Two face-match scales
+
+With the biometric service (OpenCV SFace) the match score is a **cosine similarity**: a genuine pair usually scores 0.3 to 0.7. It is reported as `matchConfidence` = cosine × 100 with `matchScale: "cosine"`, so `55` means 0.55, **not 55%**. The decision uses a cosine threshold: `FACE_MATCH_MIN_COSINE` (platform floor, default 0.363) which a tenant can only **raise** with `selfieThresholds.minFaceMatchCosine`. The 0-100 `matchConfidence` minimum applies only to the LLM fallback (`matchScale: "percent"`). The dashboard shows each score against the matching minimum. The cut-offs are not yet calibrated on your own data.
 
 ## Guardrails
 

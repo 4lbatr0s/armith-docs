@@ -59,6 +59,8 @@ POST https://armith-backend-live.onrender.com/kyc/selfie-check
 
 ## Response
 
+> `matchConfidence` is a percentage only with the LLM fallback. With the biometric service it is a cosine similarity × 100 (`matchScale: "cosine"`; 55 means 0.55). See [Threshold tuning](/advanced/threshold-tuning).
+
 ### Sync Success (200)
 ```json
 {
