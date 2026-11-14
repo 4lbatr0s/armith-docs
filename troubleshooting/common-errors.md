@@ -21,7 +21,7 @@ Actionable fixes. For user-facing copy see [Handle Results →](/guides/rest-api
 | `IDENTITY_ALREADY_LINKED` | 409 | Look up existing profile by national ID; don't duplicate. |
 | `ACCOUNT_IP_FORBIDDEN` / `API_KEY_IP_FORBIDDEN` | 403 | Add server IP/CIDR to allowlist. |
 | `CORS_FORBIDDEN` | 403 | Check `FRONTEND_URL` config / allowed origins. |
-| `GROQ_API_ERROR` / `INTERNAL_ERROR` / `failed` | 5xx/200 | Backoff + retry with same `Idempotency-Key` (max 3). Log `profileId` + `X-Correlation-Id`. |
+| `EXTRACTION_PROVIDER_ERROR` / `INTERNAL_ERROR` / `failed` | 5xx/200 | Backoff + retry with same `Idempotency-Key` (max 3). Log `profileId` + `X-Correlation-Id`. |
 | `BIOMETRIC_FACE_MATCH_UNAVAILABLE` / `BIOMETRIC_LIVENESS_UNAVAILABLE` | 200 (rejected) | Production requires vendor biometrics (`PYTHON_BIOMETRICS_URL`, `REQUIRE_VENDOR_BIOMETRICS=1`). LLM cannot approve. |
 | `SANCTIONS_HIT` (4101) | 200 | Route to compliance; never show hit details to user. |
 | `PEP_HIT` (4102) | 200 | `UNDER_REVIEW` — compliance review. |

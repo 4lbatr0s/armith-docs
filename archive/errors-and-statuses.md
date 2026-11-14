@@ -69,7 +69,7 @@ Some middleware responses use `{ "error": "Authentication required" }` without t
 | `2xxx` | Invalid document data / logic | `INVALID_IDENTITY_NUMBER`, `EXPIRED_ID`, `INVALID_AGE` |
 | `3xxx` | Document image / content quality | `BLURRY_IMAGE`, `ADVERSARIAL_IMAGE_DETECTED`, `LOW_DOCUMENT_VITALITY` |
 | `4xxx` | Selfie / liveness / match | `LOW_MATCH_CONFIDENCE`, `NO_FACE_DETECTED`, `SPOOFING_DETECTED` |
-| `5xxx` | System / runtime | `GROQ_API_ERROR`, `INTERNAL_ERROR`, `INVALID_IMAGE_URL` |
+| `5xxx` | System / runtime | `EXTRACTION_PROVIDER_ERROR`, `INTERNAL_ERROR`, `INVALID_IMAGE_URL` |
 | `6xxx` | Flow / preconditions | `PROFILE_ID_REQUIRED`, `UNSUPPORTED_COUNTRY`, `IMAGE_TOO_LARGE` |
 | `7xxx` | eID NFC verification | `EID_CHIP_AUTH_FAILED`, `EID_SOD_INVALID`, `EID_DATA_MISMATCH` |
 | `8xxx` | Screening / AML | `SANCTIONS_FLAGGED`, `PEP_FLAGGED`, `SCREENING_MISCONFIGURED` |

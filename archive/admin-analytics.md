@@ -152,7 +152,7 @@ curl -X GET "https://armith-backend-live.onrender.com/admin/errors/summary?limit
       "lastOccurrence": "2026-06-01T09:30:00Z"
     },
     {
-      "textCode": "GROQ_API_ERROR",
+      "textCode": "EXTRACTION_PROVIDER_ERROR",
       "count": 12,
       "lastOccurrence": "2026-06-01T08:00:00Z"
     }
@@ -202,7 +202,7 @@ If the funnel shows significant drop-off between ID and selfie, check:
 ### Track error trends
 
 - Rising `BLURRY_IMAGE` counts → improve capture guidance
-- Rising `GROQ_API_ERROR` → check LLM provider status
+- Rising `EXTRACTION_PROVIDER_ERROR` → check LLM provider status
 - Rising `SPOOFING_DETECTED` → review fraud patterns
 
 ## Best Practices

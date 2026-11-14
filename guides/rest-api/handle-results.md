@@ -52,7 +52,7 @@ User-facing messages and retry logic for each verification outcome.
 
 | Code | User Message | Your Action |
 |------|--------------|-------------|
-| `GROQ_API_ERROR` | "Service temporarily unavailable. Please try again." | Retry with backoff |
+| `EXTRACTION_PROVIDER_ERROR` | "Service temporarily unavailable. Please try again." | Retry with backoff |
 | `INTERNAL_ERROR` | "Something went wrong. Please try again." | Retry with backoff |
 | `INVALID_IMAGE_URL` | "Image link expired. Please re-upload." | Re-upload images |
 
@@ -73,7 +73,7 @@ User-facing messages and retry logic for each verification outcome.
 
 ### System Errors (5xxx)
 **Retry automatically with exponential backoff.**
-- `GROQ_API_ERROR`, `INTERNAL_ERROR`
+- `EXTRACTION_PROVIDER_ERROR`, `INTERNAL_ERROR`
 - Use same `Idempotency-Key` (cached response returned)
 - Max 3 retries, then escalate
 
