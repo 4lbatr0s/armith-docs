@@ -117,29 +117,25 @@ export const PLAYGROUND_ENDPOINTS = [
   {
     id: 'kyc-llm-status',
     tag: 'KYC',
-    title: 'LLM status',
-    description: 'Backend LLM readiness signal.',
+    title: 'Service status',
+    description: 'Extraction service readiness and supported countries. Requires credentials; no provider or model is disclosed.',
     method: 'GET',
     path: '/kyc/llm-status',
-    auth: 'none',
+    auth: 'apiKeyOrClerk',
     responseExamples: [
       {
         status: 200,
         label: 'OK',
         body: {
-          configured: true,
-          provider: 'Groq',
-          reasoningModel: 'meta-llama/llama-4-scout-17b-16e-instruct',
-          visionModel: 'meta-llama/llama-4-scout-17b-16e-instruct'
+          status: 'success',
+          llmService: { initialized: true, supportedCountries: ['TR', 'DE', 'GB'] },
+          message: 'KYC Service status retrieved successfully'
         }
       },
       {
-        status: 503,
-        label: 'Not configured',
-        body: {
-          configured: false,
-          errorCode: 'GROQ_NOT_CONFIGURED'
-        }
+        status: 401,
+        label: 'Missing credentials',
+        body: { success: false, errors: [{ textCode: 'UNAUTHORIZED' }] }
       }
     ]
   },

@@ -53,7 +53,7 @@ Auth priority on KYC routes: capture session → API key → Clerk. **Use API ke
 
 ## Public (No Auth)
 
-`GET /health`, `/health/ready`, `/kyc/countries`, `/kyc/llm-status`, `/config/presets`.
+`GET /health`, `/health/ready`, `/kyc/countries`, `/config/presets`.
 
 ---
 

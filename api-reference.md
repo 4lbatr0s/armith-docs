@@ -55,7 +55,7 @@ Quick endpoint scanning, auth expectations, and a live request runner.
 
 | Mode | Headers | Used for |
 |------|---------|----------|
-| **None** | — | `/health`, `/kyc/countries`, `/kyc/llm-status`, `GET /config/presets` |
+| **None** | — | `/health`, `/kyc/countries`, `GET /config/presets` |
 | **API key** | `x-api-key: ak_live_…` or `Authorization: Bearer ak_live_…` | `/kyc/*` protected routes, `/kyb/*` |
 | **Clerk JWT** | `Authorization: Bearer <session JWT>` | `/auth/profile`, `/admin/*`, `/config` |
 | **Capture session** | `X-Verification-Session: <token>` | `/kyc/*` for embedded capture flows |
@@ -129,7 +129,7 @@ Alias for status endpoint (same handler).
 Supported country codes.
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/llm-status`
-LLM provider readiness and model info.
+Extraction service readiness and supported countries. Requires an API key; it does not disclose the provider or model.
 
 ## Integrator API
 
