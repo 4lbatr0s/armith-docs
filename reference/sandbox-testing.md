@@ -16,6 +16,23 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/id-check" \
 | `rejected_mismatch` | rejected | rejected | `REJECTED` | `LOW_MATCH_CONFIDENCE` |
 | `under_review` | under_review | under_review | `UNDER_REVIEW` | — |
 
+## Test people per country
+
+The sandbox returns a **synthetic person** for the country you send, in that country's number format and with a
+machine-readable zone that has valid check digits, so every scenario behaves the same in every country. They are
+invented (the German one uses the official "Erika Mustermann" specimen name); never use them as real data.
+
+| Country | Name | Document number | Nationality |
+|---|---|---|---|
+| DE | Erika Mustermann | `L01X00T47` | DEU |
+| FR | Camille Martin | `XJ1234567` | FRA |
+| ES | Ana Garcia Lopez | `12345678Z` | ESP |
+| IT | Giulia Rossi | `CA00000AA` | ITA |
+| NL | Sanne de Vries | `SPECI2021` | NLD |
+| PL | Anna Kowalska | `ABA300000` | POL |
+| GB | Olivia Smith | `GB1234567` | GBR |
+| TR | (original sandbox person) | `10000000146` | |
+
 **Checklist:** test happy path **and** each rejection (your UX copy), `Idempotency-Key` replay, full flow (upload → ID → selfie → status → webhook), error callbacks (`?error=cancelled/expired`) for hosted. Use `ak_test_` in all dev/CI pipelines — never `ak_live_` for tests.
 
 Video Ident has **no** `sandboxScenario`. LiveKit is stubbed only when `NODE_ENV` is `test` or `development`. Production Video Ident needs real LiveKit credentials.
