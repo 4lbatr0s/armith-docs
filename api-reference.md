@@ -117,7 +117,7 @@ Score a live still (`frameImageUrl` or `frameDataUrl`). `sessionId` required.
 Finalize Video Ident scores. Default `decisionMode` is `agent_required` — Groq stills cannot auto-`APPROVE`. Does not change KYC `profile.status`. 409 `VIDEOCALL_NO_AGENT` if no agent claimed and mode ≠ `auto`.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-check`
-**Preview.** eID NFC chip verification. Chip authenticity is client-attested until server NFC exists — do not treat as production-grade.
+eID NFC chip verification. Upload the raw chip files (`chip.sod` and `chip.dataGroups`, base64); the server verifies them with ICAO passive authentication, DG1 check digits and a chip-vs-card comparison. Client attestations are refused. Without clone detection a passing result is `UNDER_REVIEW`. See [eID NFC](/advanced/eid-nfc).
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/status/:profileId`
 Combined verification progress and checkpoint results (uppercase profile status). Includes sibling `videocall` / `videocallVerification`. `progress.isFullyVerified` is ID + selfie + AML only.

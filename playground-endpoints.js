@@ -978,34 +978,35 @@ export const PLAYGROUND_ENDPOINTS = [
     id: 'kyc-eid-check',
     tag: 'KYC',
     title: 'eID NFC verification',
-    description: 'Cryptographic chip verification via submitted eID data.',
+    description: 'Server-side passive authentication of the raw chip files (EF.SOD and data groups).',
     method: 'POST',
     path: '/kyc/eid-check',
     auth: 'apiKeyOrClerk',
     body: JSON.stringify({
       profileId: '672a9c2e3f1b2c4d5e6f7890',
       countryCode: 'TR',
-      chipData: {
-        documentNumber: 'U12345678',
-        dateOfBirth: '19900101',
-        expiryDate: '20300101',
-        nationality: 'TUR',
-        surname: 'LOVELACE',
-        givenNames: 'ADA',
-        issuerAuthority: 'TR-IC-DIRECTORATE'
-      },
-      signatureAlg: 'SHA256WithRSA',
-      certificateIssuer: 'CN=TR-ID-Signing-CA',
-      certificateSubject: 'CN=TR-ID-CHIP-U12345678'
+      chip: {
+        sod: '<base64 EF.SOD>',
+        dataGroups: { 1: '<base64 EF.DG1>', 2: '<base64 EF.DG2>' }
+      }
     }, null, 2),
     responseExamples: [
       {
-        status: 200, label: 'Chip verified',
-        body: { status: 'approved', eidStatus: 'approved', profileId: '672...', data: { chipAuthenticated: true, sodSignatureValid: true, documentDataMatch: true, authenticityScore: 0.97 } }
+        status: 200, label: 'Verified, held for review (no clone detection)',
+        body: {
+          status: 'UNDER_REVIEW', chipAuthenticated: false, sodSignatureValid: true, certificateChainValid: true,
+          dataGroupHashesValid: true, documentDataMatch: true, visualDataMatch: true, documentSignerCountry: 'TR',
+          authenticityScore: 1, riskScore: 10,
+          errors: [{ textCode: 'CLONE_DETECTION_NOT_PERFORMED', severity: 'warning' }], validationId: '672...'
+        }
       },
       {
-        status: 400, label: 'Chip auth failed',
-        body: { status: 'failed', errors: [{ code: 7001, textCode: 'MISSING_CHIP_DATA', message: 'NFC chip data is required but was not provided.' }] }
+        status: 200, label: 'Tampered data group',
+        body: { status: 'REJECTED', dataGroupHashesValid: false, errors: [{ textCode: 'DG_HASH_MISMATCH', severity: 'critical', group: 2 }] }
+      },
+      {
+        status: 400, label: 'Client attestation refused',
+        body: { success: false, errors: [{ textCode: 'CHIP_ATTESTATION_NOT_ACCEPTED' }] }
       }
     ]
   },

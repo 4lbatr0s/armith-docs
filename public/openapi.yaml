@@ -1026,9 +1026,30 @@ paths:
       security:
         - apiKeyAuth: []
         - captureSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId, chip]
+              properties:
+                profileId: { type: string }
+                countryCode: { type: string }
+                chip:
+                  type: object
+                  required: [sod, dataGroups]
+                  properties:
+                    sod: { type: string, description: Base64 EF.SOD (with or without the 0x77 wrapper) }
+                    dataGroups:
+                      type: object
+                      description: Base64 data groups keyed by number (1-16); DG1 and DG2 are required.
+                      additionalProperties: { type: string }
       responses:
         '200':
           description: Chip validation result
+        '400':
+          description: Missing or malformed chip files, or a client attestation (not accepted)
         '403':
           description: Profile access denied
   /kyc/profiles:
