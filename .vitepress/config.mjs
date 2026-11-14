@@ -122,9 +122,13 @@ export default defineConfig({
           { text: 'Async Verification', link: '/advanced/async-verification' },
           { text: 'Screening (AML/PEP)', link: '/advanced/screening' },
           { text: 'eID NFC', link: '/advanced/eid-nfc' },
+          { text: 'Countries', link: '/advanced/countries' },
+          { text: 'Video Ident', link: '/advanced/video-ident' },
+          { text: 'Sovereign mode', link: '/advanced/sovereign-mode' },
           { text: 'KYB (Business)', link: '/advanced/kyb-verification' },
           { text: 'Manual Review', link: '/advanced/manual-review' },
-          { text: 'Data Rights (GDPR)', link: '/advanced/data-subject-rights' }
+          { text: 'Data Rights (GDPR)', link: '/advanced/data-subject-rights' },
+          { text: 'Security and compliance', link: '/advanced/security-and-compliance' }
         ]
       },
       {
