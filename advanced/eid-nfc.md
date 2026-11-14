@@ -31,6 +31,8 @@ curl -X POST "$BASE/kyc/eid-check" -H "x-api-key: $KEY" -H "Content-Type: applic
 
    The chip must be **bound to the person**: at least a document identifier (serial or TC number), the date of birth and a name must have been compared. Run the ID-card check first so the profile has them. A profile with too little card-face data cannot be approved from a chip alone (`VISUAL_DATA_MISSING`, `UNDER_REVIEW`), because a genuine chip of anyone would otherwise match "nothing".
 
+4. **Chip photo vs. selfie.** When the biometrics service is configured, the photo in DG2 (only after passive authentication has vouched for it) is matched with the profile's selfie using the same SFace cosine score as the rest of Armith (`FACE_MATCH_MIN_COSINE`, a tenant can only raise it). The photo is never stored or returned. A mismatch (`CHIP_FACE_MISMATCH`), no detectable face (`CHIP_FACE_NOT_DETECTED`), an unreadable photo (`CHIP_PHOTO_UNREADABLE`), no selfie on the profile (`CHIP_FACE_NOT_COMPARED`) or a matcher outage (`FACE_MATCH_UNAVAILABLE`) holds the result for review; it never approves and never rejects on its own, because a genuine holder can fail on an old photo. The response carries `faceMatch: { performed, passed }`. Run the selfie step first.
+
 Passive Authentication proves the data is what the issuing country signed. It **cannot detect a cloned chip** (genuine data copied to another chip). That is what **Active Authentication** is for: the chip signs a challenge that Armith chose, with a private key that never leaves the chip. A clone has the data but not the key.
 
 A result that passes every check **and** includes a valid Active Authentication proof is `APPROVED` with `chipAuthenticated: true`. Without the proof it is `UNDER_REVIEW` with `CLONE_DETECTION_NOT_PERFORMED`; an operator who accepts that risk can set `EID_ALLOW_PASSIVE_ONLY=1`.
@@ -83,12 +85,14 @@ The response never contains personal data: errors name a code and, for mismatche
 | Status | When |
 |---|---|
 | `APPROVED` | Every check passes **and** Active Authentication succeeded (or passive-only is allowed with `EID_ALLOW_PASSIVE_ONLY=1`). |
-| `UNDER_REVIEW` | All checks pass but clone detection was not performed, **or** the profile has too little card-face data to bind the chip to the person (`VISUAL_DATA_MISSING`), **or** no CSCA trust anchors are configured (`NO_TRUST_ANCHORS`, a configuration gap, not the applicant's fault). |
-| `REJECTED` | Evidence of tampering or a different person: `SOD_SIGNATURE_INVALID`, `SOD_CHAIN_UNTRUSTED`, `DG_HASH_MISMATCH`, `DG_NOT_IN_SOD`, `ACTIVE_AUTH_SIGNATURE_INVALID`, `MRZ_CHECK_DIGIT_INVALID`, `CHIP_VISUAL_MISMATCH`, `DOCUMENT_EXPIRED`. |
+| `UNDER_REVIEW` | All checks pass but clone detection was not performed, **or** the profile has too little card-face data to bind the chip to the person (`VISUAL_DATA_MISSING`), **or** the chip photo could not be matched with the selfie (see above), **or** no CSCA trust anchors are configured (`NO_TRUST_ANCHORS`, a configuration gap, not the applicant's fault). |
+| `REJECTED` | Evidence of tampering or a different person: `SOD_SIGNATURE_INVALID`, `SOD_CHAIN_UNTRUSTED`, `DG_HASH_MISMATCH`, `DG_NOT_IN_SOD`, `ACTIVE_AUTH_SIGNATURE_INVALID`, `SOD_SIGNER_REVOKED`, `MRZ_CHECK_DIGIT_INVALID`, `CHIP_VISUAL_MISMATCH`, `DOCUMENT_EXPIRED`. |
 | `FAILED` | A bad read; ask the user to tap again: `SOD_MALFORMED`, `DG1_MALFORMED`, `DG_MISSING_REQUIRED`, `ACTIVE_AUTH_KEY_MISSING`. Malformed uploads are a `400` (`MISSING_CHIP_DATA`, `CHIP_PAYLOAD_INVALID`). |
 
 ## Operator setup
 
 Set `EID_CSCA_DIR` to a directory of **CSCA certificates** (PEM or DER: `.pem .crt .cer .der`) obtained from the issuing countries or the ICAO PKD. Only CA certificates are loaded; the directory is re-read every ten minutes. With no directory, nothing is trusted and results are held for review. A document signer's own expiry is only a warning (`DOCUMENT_SIGNER_EXPIRED`); the CSCA must be valid today.
 
-Revocation (CRLs) is not checked yet.
+**ICAO master lists** (`.ml`, `.mls`) in the same directory add the countries they list, but only when the list's signature verifies **and** its signer chains to a CSCA you loaded from a plain certificate file. A master list can extend trust, never start it. Only CA certificates in a list are used; a list that fails any check is skipped and logged.
+
+**Revocation.** Put CSCA CRLs (`.crl`, DER or PEM) in the same directory. A CRL counts only if its CSCA key verifies it; a Document Signer listed on one is rejected (`SOD_SIGNER_REVOKED`). An unverifiable CRL is ignored with `CRL_UNVERIFIABLE`; a CRL past its next-update date adds `CRL_STALE` (keep your CRLs fresh: Armith does not download them). Revocation is applied strictly: a signer revoked after it signed a document still rejects that document.
