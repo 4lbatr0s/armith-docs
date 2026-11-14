@@ -1,6 +1,6 @@
 # Web SDK (`@armith/web`)
 
-The browser half of [hosted capture](/guides/hosted-capture/). It opens the hosted flow in a popup (or this tab),
+The browser half of [hosted capture](/guides/hosted-capture/get-started). It opens the hosted flow in a popup (or this tab),
 receives the result, and checks the `state`. It holds no secrets and does not frame the verification page.
 
 ## The flow
