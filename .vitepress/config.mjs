@@ -98,6 +98,7 @@ export default defineConfig({
           { text: 'Hosted Capture', link: '/guides/hosted-capture/get-started' },
           { text: 'Mobile SDK', link: '/guides/mobile-sdk/get-started' },
           { text: 'Webhooks', link: '/guides/webhooks/get-started' },
+          { text: 'Server SDKs', link: '/guides/sdks' },
           { text: 'Webhook Signatures & Events', link: '/guides/webhooks/verify-signatures' }
         ]
       },
@@ -128,7 +129,8 @@ export default defineConfig({
           { text: 'KYB (Business)', link: '/advanced/kyb-verification' },
           { text: 'Manual Review', link: '/advanced/manual-review' },
           { text: 'Data Rights (GDPR)', link: '/advanced/data-subject-rights' },
-          { text: 'Security and compliance', link: '/advanced/security-and-compliance' }
+          { text: 'Security and compliance', link: '/advanced/security-and-compliance' },
+          { text: 'Audit and four-eyes', link: '/advanced/audit-and-review' }
         ]
       },
       {

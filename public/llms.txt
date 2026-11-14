@@ -16,12 +16,14 @@ OpenAPI: https://armith-docs-standalone.onrender.com/openapi.yaml
 - [Hosted capture](https://armith-docs-standalone.onrender.com/guides/hosted-capture/)
 - [React Native SDK](https://armith-docs-standalone.onrender.com/guides/mobile-sdk/)
 - [Webhooks](https://armith-docs-standalone.onrender.com/guides/webhooks/get-started): HMAC-signed events
+- [Server SDKs](https://armith-docs-standalone.onrender.com/guides/sdks): Node and Python clients, safe retries, webhook verification
 
 ## Advanced
 - [Countries](https://armith-docs-standalone.onrender.com/advanced/countries): supported countries and how to add one
 - [Video Ident](https://armith-docs-standalone.onrender.com/advanced/video-ident): human, AI or AI-then-human, regulatory floors, AI disclosure
 - [eID NFC](https://armith-docs-standalone.onrender.com/advanced/eid-nfc): server-side chip verification (passive authentication, CRLs, master lists)
 - [Sovereign mode](https://armith-docs-standalone.onrender.com/advanced/sovereign-mode): no third-party AI
+- [Audit and four-eyes](https://armith-docs-standalone.onrender.com/advanced/audit-and-review): tamper-evident audit trail, per-case audit pack, second-reviewer approval
 - [Security and compliance](https://armith-docs-standalone.onrender.com/advanced/security-and-compliance)
 - [Data rights (GDPR)](https://armith-docs-standalone.onrender.com/advanced/data-subject-rights)
 
