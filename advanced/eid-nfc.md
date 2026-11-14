@@ -31,7 +31,31 @@ curl -X POST "$BASE/kyc/eid-check" -H "x-api-key: $KEY" -H "Content-Type: applic
 
    The chip must be **bound to the person**: at least a document identifier (serial or TC number), the date of birth and a name must have been compared. Run the ID-card check first so the profile has them. A profile with too little card-face data cannot be approved from a chip alone (`VISUAL_DATA_MISSING`, `UNDER_REVIEW`), because a genuine chip of anyone would otherwise match "nothing".
 
-Passive Authentication proves the data is what the issuing country signed. It **cannot detect a cloned chip** (genuine data copied to another chip). Until Active/Chip Authentication is supported, a result that passes every check is `UNDER_REVIEW` with `CLONE_DETECTION_NOT_PERFORMED`. An operator who accepts that risk can set `EID_ALLOW_PASSIVE_ONLY=1` to get `APPROVED`.
+Passive Authentication proves the data is what the issuing country signed. It **cannot detect a cloned chip** (genuine data copied to another chip). That is what **Active Authentication** is for: the chip signs a challenge that Armith chose, with a private key that never leaves the chip. A clone has the data but not the key.
+
+A result that passes every check **and** includes a valid Active Authentication proof is `APPROVED` with `chipAuthenticated: true`. Without the proof it is `UNDER_REVIEW` with `CLONE_DETECTION_NOT_PERFORMED`; an operator who accepts that risk can set `EID_ALLOW_PASSIVE_ONLY=1`.
+
+## Active Authentication
+
+1. **Ask for a challenge**, then tap the card:
+
+```bash
+curl -X POST "$BASE/kyc/eid-challenge" -H "x-api-key: $KEY" -H "Content-Type: application/json" \
+  -d '{"profileId": "<ID>"}'
+# {"challengeId": "...", "challenge": "<base64, 8 bytes>", "expiresAt": "...", "expiresInSeconds": 120}
+```
+
+2. Send the 8 bytes to the chip with `INTERNAL AUTHENTICATE` (ISO 7816-4) and keep its answer.
+3. **Upload** it with the other files:
+
+```json
+{ "profileId": "<ID>", "chip": { "sod": "...", "dataGroups": { "1": "...", "2": "...", "14": "...", "15": "..." },
+  "activeAuthentication": { "challengeId": "<from step 1>", "signature": "<base64 of the chip's response>" } } }
+```
+
+The challenge is valid for **two minutes**, for **that profile only**, and is **spent by the first upload that uses it**, whatever the verdict. Reusing, replaying or presenting an expired or foreign challenge is `400 CHALLENGE_INVALID`: ask for a new one. A profile can hold at most five open challenges (`429 TOO_MANY_CHALLENGES`).
+
+DG15 (the Active Authentication public key) must be sent, and its hash must have passed passive authentication, otherwise the key is not trusted and the check is skipped. A signature that does not verify against it is `REJECTED` with `ACTIVE_AUTH_SIGNATURE_INVALID` (a cloned chip). ECDSA (hash from DG14, default SHA-256) and RSA (ISO/IEC 9796-2 scheme 1) are supported. A chip without DG15 simply cannot prove it holds a key and stays `UNDER_REVIEW`.
 
 ## Response
 
@@ -58,10 +82,10 @@ The response never contains personal data: errors name a code and, for mismatche
 
 | Status | When |
 |---|---|
-| `APPROVED` | Every check passes **and** passive-only is allowed (`EID_ALLOW_PASSIVE_ONLY=1`). |
+| `APPROVED` | Every check passes **and** Active Authentication succeeded (or passive-only is allowed with `EID_ALLOW_PASSIVE_ONLY=1`). |
 | `UNDER_REVIEW` | All checks pass but clone detection was not performed, **or** the profile has too little card-face data to bind the chip to the person (`VISUAL_DATA_MISSING`), **or** no CSCA trust anchors are configured (`NO_TRUST_ANCHORS`, a configuration gap, not the applicant's fault). |
-| `REJECTED` | Evidence of tampering or a different person: `SOD_SIGNATURE_INVALID`, `SOD_CHAIN_UNTRUSTED`, `DG_HASH_MISMATCH`, `DG_NOT_IN_SOD`, `MRZ_CHECK_DIGIT_INVALID`, `CHIP_VISUAL_MISMATCH`, `DOCUMENT_EXPIRED`. |
-| `FAILED` | A bad read; ask the user to tap again: `SOD_MALFORMED`, `DG1_MALFORMED`, `DG_MISSING_REQUIRED`. Malformed uploads are a `400` (`MISSING_CHIP_DATA`, `CHIP_PAYLOAD_INVALID`). |
+| `REJECTED` | Evidence of tampering or a different person: `SOD_SIGNATURE_INVALID`, `SOD_CHAIN_UNTRUSTED`, `DG_HASH_MISMATCH`, `DG_NOT_IN_SOD`, `ACTIVE_AUTH_SIGNATURE_INVALID`, `MRZ_CHECK_DIGIT_INVALID`, `CHIP_VISUAL_MISMATCH`, `DOCUMENT_EXPIRED`. |
+| `FAILED` | A bad read; ask the user to tap again: `SOD_MALFORMED`, `DG1_MALFORMED`, `DG_MISSING_REQUIRED`, `ACTIVE_AUTH_KEY_MISSING`. Malformed uploads are a `400` (`MISSING_CHIP_DATA`, `CHIP_PAYLOAD_INVALID`). |
 
 ## Operator setup
 

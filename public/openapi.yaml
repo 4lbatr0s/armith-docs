@@ -1019,6 +1019,30 @@ paths:
       responses:
         '200':
           description: Preset applied
+  /kyc/eid-challenge:
+    post:
+      tags: [KYC]
+      summary: One-time Active Authentication challenge for an eID chip (caller must own the profile)
+      description: Returns an 8-byte challenge valid for two minutes, for this profile only, spent by the first eid-check that uses it.
+      security:
+        - apiKeyAuth: []
+        - captureSession: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [profileId]
+              properties:
+                profileId: { type: string }
+      responses:
+        '200':
+          description: Challenge issued (Cache-Control no-store)
+        '403':
+          description: Profile access denied
+        '429':
+          description: Too many open challenges for this profile
   /kyc/eid-check:
     post:
       tags: [KYC]
@@ -1045,6 +1069,13 @@ paths:
                       type: object
                       description: Base64 data groups keyed by number (1-16); DG1 and DG2 are required.
                       additionalProperties: { type: string }
+                    activeAuthentication:
+                      type: object
+                      description: The chip's signature over a challenge from /kyc/eid-challenge (clone detection).
+                      required: [challengeId, signature]
+                      properties:
+                        challengeId: { type: string }
+                        signature: { type: string, description: Base64 INTERNAL AUTHENTICATE response }
       responses:
         '200':
           description: Chip validation result

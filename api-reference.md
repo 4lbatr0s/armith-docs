@@ -116,8 +116,11 @@ Score a live still (`frameImageUrl` or `frameDataUrl`). `sessionId` required.
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/videocall-check`
 Finalize Video Ident scores. Default `decisionMode` is `agent_required` — Groq stills cannot auto-`APPROVE`. Does not change KYC `profile.status`. 409 `VIDEOCALL_NO_AGENT` if no agent claimed and mode ≠ `auto`.
 
+### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-challenge`
+One-time 8-byte challenge for eID Active Authentication (clone detection): valid two minutes, for one profile, spent by the first upload that uses it. See [eID NFC](/advanced/eid-nfc).
+
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/eid-check`
-eID NFC chip verification. Upload the raw chip files (`chip.sod` and `chip.dataGroups`, base64); the server verifies them with ICAO passive authentication, DG1 check digits and a chip-vs-card comparison. Client attestations are refused. Without clone detection a passing result is `UNDER_REVIEW`. See [eID NFC](/advanced/eid-nfc).
+eID NFC chip verification. Upload the raw chip files (`chip.sod` and `chip.dataGroups`, base64); the server verifies them with ICAO passive authentication, DG1 check digits and a chip-vs-card comparison. Client attestations are refused. Include `chip.activeAuthentication` (clone detection) to be eligible for `APPROVED`; without it a passing result is `UNDER_REVIEW`. See [eID NFC](/advanced/eid-nfc).
 
 ### <span class="armith-method armith-method-get">GET</span> `/kyc/status/:profileId`
 Combined verification progress and checkpoint results (uppercase profile status). Includes sibling `videocall` / `videocallVerification`. `progress.isFullyVerified` is ID + selfie + AML only.
