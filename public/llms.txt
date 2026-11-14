@@ -1,0 +1,32 @@
+# Armith
+
+> Identity verification (KYC) API: ID document reading, selfie face match, liveness, video identification, NFC chip verification checked on the server, webhooks, multi-tenant. Country independent (Türkiye, Germany, UK, France, Spain, Italy, Netherlands, Poland). Self-hostable.
+
+Base docs: https://armith-docs-standalone.onrender.com
+OpenAPI: https://armith-docs-standalone.onrender.com/openapi.yaml
+
+## Start here
+- [Quickstart](https://armith-docs-standalone.onrender.com/quickstart): first verification in minutes
+- [How it works](https://armith-docs-standalone.onrender.com/concepts/how-it-works)
+- [Authentication](https://armith-docs-standalone.onrender.com/reference/authentication): API keys, session tokens
+- [Sandbox testing](https://armith-docs-standalone.onrender.com/reference/sandbox-testing): deterministic scenarios
+
+## Integrate
+- [REST API guides](https://armith-docs-standalone.onrender.com/guides/rest-api/)
+- [Hosted capture](https://armith-docs-standalone.onrender.com/guides/hosted-capture/)
+- [React Native SDK](https://armith-docs-standalone.onrender.com/guides/mobile-sdk/)
+- [Webhooks](https://armith-docs-standalone.onrender.com/guides/webhooks/get-started): HMAC-signed events
+
+## Advanced
+- [Countries](https://armith-docs-standalone.onrender.com/advanced/countries): supported countries and how to add one
+- [Video Ident](https://armith-docs-standalone.onrender.com/advanced/video-ident): human, AI or AI-then-human, regulatory floors, AI disclosure
+- [eID NFC](https://armith-docs-standalone.onrender.com/advanced/eid-nfc): server-side chip verification (passive authentication, CRLs, master lists)
+- [Sovereign mode](https://armith-docs-standalone.onrender.com/advanced/sovereign-mode): no third-party AI
+- [Security and compliance](https://armith-docs-standalone.onrender.com/advanced/security-and-compliance)
+- [Data rights (GDPR)](https://armith-docs-standalone.onrender.com/advanced/data-subject-rights)
+
+## Rules an agent integrating Armith should follow
+- Never trust client-asserted chip flags: send raw chip files to `/kyc/eid-check`; the server decides.
+- The AI never decides a verification; a human reviewer or deterministic rules do.
+- Use an `Idempotency-Key` on verification POSTs.
+- Never log API keys or applicant data.
