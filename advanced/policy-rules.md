@@ -82,6 +82,8 @@ A profile is a ready-made workflow: steps plus policy rules for one kind of cust
 | `tr-payments` | Payment and e-money firms in Turkey | ID, selfie, screening | + invalid TC number, chip rules |
 | `tr-crypto` | Crypto asset service providers in Turkey | ID, selfie, live video, screening, human review | same as `tr-payments` |
 
+Each profile in `GET /admin/workflows/profiles` also carries an **advisory** `retention` field: `minimumYears` (8 for the Turkey profiles, 5 for `eu-strict`, `null` for `eu-light` because it depends on your licence), a `basis` text and `enforced: false`. Armith does not delete or keep data because of it. Set retention for your deployment yourself (see Data Rights and the retention checklist) and confirm the figure with counsel.
+
 ::: warning A starting point, not legal advice
 Every profile reflects the public reading of a rule and is marked `confirm_with_counsel`. Check it with your compliance counsel before you rely on it. "Chip not read" holds the case for review; remove that rule if your flow has no NFC step.
 :::
