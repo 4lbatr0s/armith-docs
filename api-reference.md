@@ -151,7 +151,7 @@ Mint additional capture session for existing profile. API key only.
 Record capture consent. Write capture token only. Body `{ "purpose" }` (default `identity_verification`). 200 `{ ok, consentCapturedAt, consentPurpose }`.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/sessions/complete`
-Exchange result `code` (+ optional `state`). Returns `{ profileId, status` (lowercase), `integrationExternalRef }`. Full scores: webhook or `GET /kyc/status`. API key only.
+Exchange result `code` (+ optional `state`). Returns `{ profileId, status` (lowercase), `integrationExternalRef }`. Full scores: webhook or `GET /kyc/status/{profileId}`. API key only.
 
 ### <span class="armith-method armith-method-post">POST</span> `/kyc/sessions/result-code`
 Mint a result code during capture flow. Write capture session auth. 409 `RESULT_CODE_NOT_READY` until terminal; 503 `RESULT_CODE_STORE_UNAVAILABLE` without Redis in production. Default TTL 900s.
