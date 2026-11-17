@@ -215,8 +215,8 @@ Use `ak_test_` key + `sandboxScenario`:
 | `LOW_MATCH_CONFIDENCE` | Face doesn't match ID portrait | Retake selfie, better lighting |
 | `SPOOFING_DETECTED` | Screen/photo/print detected | Live selfie only, no screens |
 | `NO_FACE_DETECTED` | No face in frame | Center face, good lighting |
-| `POOR_SELFIE_QUALITY` | Blurry/dark/overexposed | Retake with flash/auto |
-| `FACE_COVERAGE_LOW` | Face too small in frame | Move closer to camera |
+| `POOR_IMAGE_QUALITY` | Blurry or low quality (`INSUFFICIENT_LIGHTING` for dark images) | Retake with flash/auto |
+| `FACE_TOO_SMALL` | Face too small in frame (`FACE_PARTIALLY_COVERED` when obscured) | Move closer to camera |
 | `MULTIPLE_FACES` | More than one face detected | Solo selfie only |
 
 ---

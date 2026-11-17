@@ -12,7 +12,7 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/id-check" \
 |----------|----|--------|---------|-------|
 | `approved` | approved | approved | `APPROVED` | — |
 | `rejected_blur` | rejected | — | `REJECTED` | `BLURRY_IMAGE` (3001) |
-| `rejected_tampering` | rejected | — | `REJECTED` | `HIGH_TAMPERING_RISK` |
+| `rejected_tampering` | rejected | — | `REJECTED` | `LOW_DOCUMENT_VITALITY` (with `LOW_CONFIDENCE`) |
 | `rejected_mismatch` | rejected | rejected | `REJECTED` | `LOW_MATCH_CONFIDENCE` |
 | `under_review` | under_review | under_review | `UNDER_REVIEW` | — |
 
