@@ -31,3 +31,6 @@ With the biometric service (OpenCV SFace) the match score is a **cosine similari
 - Video Ident defaults to `agent_required`. Do not switch to `auto` expecting Groq stills to `APPROVE` — the clean path is `UNDER_REVIEW` until an agent disposes. `minFrameCount` (default 3) is fail-closed.
 
 Snapshot of thresholds used per verification is returned on `GET /kyc/status/:profileId` (`thresholds`) — use it to debug "why did this reject?".
+## Public benchmark (face match)
+
+On the public LFW DevTest list (1,000 pairs: 500 same person, 500 different), the default face-match threshold of 0.363 gave 0 false matches in 500 different-person pairs (95% upper bound 0.76%) and rejected 5.6% of genuine pairs (28 of 500). The equal error rate was 5.0% at a threshold of 0.25. LFW is web photos of public figures: this is a sanity check, **not** a measure of ID-photo-versus-selfie accuracy on your traffic. Measure your own labelled set as described above. Liveness was not measured. Run date 2026-11-17, SFace with YuNet, OpenCV 5.0.0.
