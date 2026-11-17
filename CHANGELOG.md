@@ -5,7 +5,7 @@ Changes that affect people who use the Armith API, the dashboard or the hosted p
 ## 2026-11-17
 
 - **Fixed** An invalid request body on `POST /kyc/id-check`, `/kyc/selfie-check`, `/kyc/profiles`, `/kyc/hosted-sessions` and `/kyc/sessions/complete` answered `500 INTERNAL_ERROR` instead of `400` with the list of invalid fields (a library upgrade renamed a field the validator read). It now answers `400` with `details`.
-- **Fixed** A malformed id in an admin URL (for example `DELETE /admin/api-keys/abc`) answered `500`. It now answers `400 INVALID_ID`.
+- **Fixed** A malformed id in an admin URL (for example in `DELETE /admin/api-keys/{id}`) answered `500`. It now answers `400 INVALID_ID`.
 - **Fixed** Calls to the admin, config and KYB admin APIs with no credentials were redirected (`302`) to the home page. They now answer `401` JSON.
 - **Fixed** The video desk "claim" call (`POST /admin/videocall/{id}/claim`) answered `500` for everyone since a database library upgrade. Video Ident is still on hold.
 - **Fixed** `DELETE /admin/verifications/{profileId}` deleted a case that was on legal hold. It now answers `409 LEGAL_HOLD` and keeps the case, like the data-subject erase and the retention jobs already did.
