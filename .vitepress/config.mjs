@@ -1,9 +1,48 @@
 import { defineConfig } from 'vitepress';
 
+const HOSTNAME = 'https://armith-docs-standalone.onrender.com';
+const SITE_TITLE = 'Armith Docs';
+const SITE_DESCRIPTION = 'Verify ID documents and selfies via REST, hosted capture, or the React Native SDK. HMAC webhooks, sandbox keys, tenant isolation.';
+
+/** Public URL of a page: cleanUrls, and index pages map to their folder. */
+export const pageUrl = (relativePath) => {
+  const path = relativePath.replace(/\.md$/, '');
+  if (path === 'index') return `${HOSTNAME}/`;
+  if (path.endsWith('/index')) return `${HOSTNAME}/${path.slice(0, -'index'.length)}`;
+  return `${HOSTNAME}/${path}`;
+};
+
 export default defineConfig({
   lang: 'en-US',
   title: 'Armith Docs',
   description: 'Verify ID documents and selfies via REST, hosted capture, or the React Native SDK. HMAC webhooks, sandbox keys, tenant isolation.',
+  transformHead({ pageData }) {
+    const url = pageUrl(pageData.relativePath);
+    const title = pageData.frontmatter?.title || pageData.title || SITE_TITLE;
+    const description = pageData.frontmatter?.description || pageData.description || SITE_DESCRIPTION;
+    const head = [
+      ['link', { rel: 'canonical', href: url }],
+      ['meta', { property: 'og:url', content: url }],
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { name: 'twitter:title', content: title }],
+      ['meta', { name: 'twitter:description', content: description }]
+    ];
+    if (/^(tr\/)?learn\//.test(pageData.relativePath) || pageData.relativePath === 'tr/tc-kimlik-dogrulama.md') {
+      const article = {
+        '@context': 'https://schema.org',
+        '@type': 'TechArticle',
+        headline: title,
+        description,
+        inLanguage: pageData.relativePath.startsWith('tr/') ? 'tr' : 'en',
+        url,
+        publisher: { '@type': 'Organization', name: 'Armith' }
+      };
+      if (pageData.lastUpdated) article.dateModified = new Date(pageData.lastUpdated).toISOString();
+      head.push(['script', { type: 'application/ld+json' }, JSON.stringify(article)]);
+    }
+    return head;
+  },
   appearance: true,
   cleanUrls: true,
   srcExclude: ['archive/**'],
@@ -13,21 +52,9 @@ export default defineConfig({
   },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-    ['link', { rel: 'canonical', href: 'https://armith-docs-standalone.onrender.com/' }],
     ['meta', { name: 'theme-color', content: '#1B2A4A' }],
     ['meta', { property: 'og:type', content: 'website' }],
-    ['meta', { property: 'og:url', content: 'https://armith-docs-standalone.onrender.com/' }],
-    ['meta', { property: 'og:title', content: 'Armith Docs — KYC API, hosted capture, React Native SDK' }],
-    ['meta', {
-      property: 'og:description',
-      content: 'API-first KYC documentation for Armith — identity verification, hosted capture, mobile SDK'
-    }],
     ['meta', { name: 'twitter:card', content: 'summary' }],
-    ['meta', { name: 'twitter:title', content: 'Armith Docs' }],
-    ['meta', {
-      name: 'twitter:description',
-      content: 'Verify ID documents and selfies via REST, hosted capture, or the React Native SDK.'
-    }],
     ['link', { rel: 'preconnect', href: 'https://fonts.googleapis.com' }],
     ['link', { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' }],
     [
