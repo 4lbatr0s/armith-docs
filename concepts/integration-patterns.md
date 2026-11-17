@@ -101,7 +101,7 @@ Your Backend           Armith API           User Browser
     │◄───── slim status ───│                    │
 ```
 
-Webhooks (or `GET /kyc/status`) are the official decisioned result.
+Webhooks (or `GET /kyc/status/{profileId}`) are the official decisioned result.
 
 **When to choose:**
 - Web app, want integration in hours not days

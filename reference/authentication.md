@@ -45,7 +45,7 @@ Your backend mints it, the end-user's browser/app sends it — so you never expo
 X-Verification-Session: <token>
 ```
 
-Mint **write** tokens from your backend: `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions` (v2 `scope=capture_write`, `t=` on `/w/start`, `/m/start`, `/v/start`). Dashboard **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) is **v1 read-only** — poll `GET /kyc/status` only (`403 CAPTURE_SESSION_READ_ONLY` on writes).
+Mint **write** tokens from your backend: `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions` (v2 `scope=capture_write`, `t=` on `/w/start`, `/m/start`, `/v/start`). Dashboard **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) is **v1 read-only** — poll `GET /kyc/status/{profileId}` only (`403 CAPTURE_SESSION_READ_ONLY` on writes).
 
 Auth priority on KYC routes: capture session → API key → Clerk. **Use API keys from your backend whenever you have a backend.**
 

@@ -11,7 +11,7 @@ Armith is country independent. Nothing in the core assumes one country: country 
 | GB | United Kingdom | Dedicated |
 | FR, ES, IT, NL, PL | France, Spain, Italy, Netherlands, Poland | Generic ICAO validator with national number formats |
 
-`GET /kyc/supported-countries` lists the codes enabled on your deployment. A country is supported when it has an ID card prompt and a validator. A request for any other country is refused with `UNSUPPORTED_COUNTRY`; Armith never falls back to another country's rules.
+`GET /kyc/countries` lists the codes enabled on your deployment. A country is supported when it has an ID card prompt and a validator. A request for any other country is refused with `UNSUPPORTED_COUNTRY`; Armith never falls back to another country's rules.
 
 ## Where the country comes from
 

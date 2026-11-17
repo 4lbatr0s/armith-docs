@@ -144,7 +144,7 @@ curl -X POST "https://armith-backend-live.onrender.com/kyc/profiles/PROFILE_ID/s
 
 Simple one-shot variant (no prior profile): `POST /kyc/hosted-sessions` — same body, defaults `channel: web`.
 
-Admin **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) issues a **v1 read-only** token for `GET /kyc/status`. It cannot open `/w/start` or `/m/start`. Integrator write links come from `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions`.
+Admin **Mint capture session** (`POST /admin/verifications/:profileId/capture-session`) issues a **v1 read-only** token for `GET /kyc/status/{profileId}`. It cannot open `/w/start` or `/m/start`. Integrator write links come from `POST /kyc/profiles`, `POST /kyc/profiles/:id/sessions`, or `POST /kyc/hosted-sessions`.
 
 ---
 
