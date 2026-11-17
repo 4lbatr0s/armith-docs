@@ -82,6 +82,7 @@ export default defineConfig({
           { text: 'Pricing and billing', link: '/pricing' },
           { text: 'Türkçe özet', link: '/tr/' },
           { text: 'How It Works', link: '/concepts/how-it-works' },
+          { text: 'Is Armith right for you?', link: '/concepts/is-armith-right-for-you' },
           { text: 'Choose Your Path', link: '/concepts/integration-patterns' },
           { text: 'Glossary', link: '/concepts/terminology' }
         ]
