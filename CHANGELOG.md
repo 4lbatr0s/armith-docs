@@ -4,6 +4,7 @@ Changes that affect people who use the Armith API, the dashboard or the hosted p
 
 ## 2026-11-17
 
+- **Fixed** `DELETE /admin/verifications/{profileId}` deleted a case that was on legal hold. It now answers `409 LEGAL_HOLD` and keeps the case, like the data-subject erase and the retention jobs already did.
 - **Fixed** Hosted capture on the web (`/w/start`) showed "invalid link" for every session created with `POST /kyc/profiles` or `POST /kyc/hosted-sessions`, because the page expected a profile id that those calls do not return yet. The page now accepts both token types. If you saw this error on a fresh link, create a new session after updating.
 - **Added** Public benchmark of face matching on the LFW test list, with its limits: see [Threshold tuning](/advanced/threshold-tuning).
 - **Added** 21 more admin routes in the OpenAPI spec (audit, usage, regulation profiles, re-verification, workflow revisions, manual review, webhook retry, data-subject export).

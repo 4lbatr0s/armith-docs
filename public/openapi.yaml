@@ -554,6 +554,8 @@ paths:
       responses:
         '200':
           description: Deleted
+        '409':
+          description: Case is on legal hold (LEGAL_HOLD); it cannot be deleted
   '/admin/verifications/{profileId}/capture-session':
     post:
       tags: [Admin]
