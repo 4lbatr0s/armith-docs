@@ -142,6 +142,17 @@ export default defineConfig({
         ]
       },
       {
+        text: 'Learn',
+        collapsed: true,
+        items: [
+          { text: 'TC Kimlik checksum', link: '/learn/tc-kimlik-checksum' },
+          { text: 'TC Kimlik doğrulama (tr)', link: '/tr/tc-kimlik-dogrulama' },
+          { text: 'MRZ check digits', link: '/learn/mrz-check-digits' },
+          { text: 'NFC chip verification', link: '/learn/nfc-id-chip-verification' },
+          { text: 'KYC cost per verification', link: '/learn/kyc-cost-per-verification' }
+        ]
+      },
+      {
         text: 'Troubleshooting',
         collapsed: true,
         items: [
