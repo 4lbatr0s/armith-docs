@@ -56,3 +56,7 @@ GET /admin/reverification/due?days=60&format=csv # CSV download
 ```
 
 `days` is 1 to 365 (default 60). Each row has the case id, country, expiry date, days left and whether it already expired, sorted by expiry date. The list holds no names or numbers, so it is safe to share. To re-check a person, create a new capture link for the case (Cases menu > capture link, or send it by WhatsApp or email).
+
+### Webhook: `verification.reverification_due`
+
+Subscribe an endpoint to this event to be told when an approved person's document expired or expires within the notice window (default 30 days). The event is sent once per expiry date. The payload `data` holds `profileId`, `expiryDate`, `daysToExpiry` and `expired`. The operator turns the daily job on with `REVERIFICATION_NOTICE_ENABLED=1` and sets the window with `REVERIFICATION_NOTICE_DAYS`. An endpoint with no event filter receives all events, so set a filter if you do not want this one.
