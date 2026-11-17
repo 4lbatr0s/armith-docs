@@ -80,6 +80,7 @@ export default defineConfig({
           { text: 'Overview', link: '/' },
           { text: 'Quickstart (5 min)', link: '/quickstart' },
           { text: 'Pricing and billing', link: '/pricing' },
+          { text: 'Türkçe özet', link: '/tr/' },
           { text: 'How It Works', link: '/concepts/how-it-works' },
           { text: 'Choose Your Path', link: '/concepts/integration-patterns' },
           { text: 'Glossary', link: '/concepts/terminology' }
