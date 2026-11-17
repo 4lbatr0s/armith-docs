@@ -1,5 +1,9 @@
 # Advanced: Video Ident
 
+::: warning On hold
+This feature is on hold. See [Feature status](/concepts/feature-status). Do not rely on it for a regulatory duty.
+:::
+
 Live video identification. You decide, per tenant, who answers the call: a human agent, an AI agent (with an optional avatar), or the AI first with a human taking over. Each country's regulatory minimum is enforced on top of your choice.
 
 ## Choosing who answers

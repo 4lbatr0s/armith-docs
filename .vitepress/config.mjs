@@ -84,6 +84,7 @@ export default defineConfig({
           { text: 'Türkiye kurulum rehberi', link: '/tr/turkiye-kurulum' },
           { text: 'How It Works', link: '/concepts/how-it-works' },
           { text: 'Is Armith right for you?', link: '/concepts/is-armith-right-for-you' },
+          { text: 'Feature status', link: '/concepts/feature-status' },
           { text: 'Choose Your Path', link: '/concepts/integration-patterns' },
           { text: 'Glossary', link: '/concepts/terminology' }
         ]
