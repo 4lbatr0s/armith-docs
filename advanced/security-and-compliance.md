@@ -8,7 +8,7 @@ What Armith does with personal data, and what a regulated customer needs to know
 - **Lookups without plaintext.** Searches and duplicate checks use keyed hashes (blind indexes), exact match only, scoped to one tenant. There is no cross-tenant search.
 - **Retention.** Applicant media (photos, selfies, call recordings) must have an explicit decision in production: a purge age with a schedule, or keep-forever on purpose.
 - **Erasure and export.** `DELETE /admin/data-subject/{profileId}` erases personal data (including call transcripts and stored media) unless the profile is on legal hold. `GET /admin/data-subject/{profileId}/export` returns everything held, including transcripts.
-- **Account closure.** Deleting an organisation revokes API keys, disables webhooks and blocks the account.
+- **Account closure.** Deleting an organisation or a personal account revokes API keys, disables webhooks and blocks the account. The applicant records are kept, because identity checks carry retention duties: erase them on purpose with the data-subject endpoints or the retention schedule. A deleted personal account also loses the operator's own email and name.
 
 ## Where data goes
 
