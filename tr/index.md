@@ -24,7 +24,7 @@ Panelde **Politika > Profilden başla** ile hazır bir akış seçin: `eu-light`
 ## Başlangıç
 
 1. Panelde hesap açın ve **Entegrasyonlar > API anahtarları** bölümünden bir sandbox anahtarı alın.
-2. [Hızlı başlangıç](/quickstart) adımlarını izleyin.
+2. [Hızlı başlangıç (Türkçe)](/tr/hizli-baslangic) veya [İngilizce hızlı başlangıç](/quickstart) adımlarını izleyin.
 3. Başvurana bağlantıyı WhatsApp veya e-posta ile gönderin (vaka menüsü).
 
 ## Veri ve KVKK
