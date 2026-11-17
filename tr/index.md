@@ -21,6 +21,10 @@ Bir doğrulama, kimlik kontrolü tamamlandığında bir kez sayılır. Aylık as
 
 Panelde **Politika > Profilden başla** ile hazır bir akış seçin: `eu-light`, `eu-strict`, `tr-payments`, `tr-crypto`. Her profil adımları ve kuralları ayarlar. Türkiye profilleri NFC çipini ve TC Kimlik No sağlama kontrolünü içerir. Her profil başlangıç noktasıdır, hukuki tavsiye değildir. Ayrıntılar: [Politika kuralları](/advanced/policy-rules).
 
+## Türkiye rehberi
+
+Profil seçimi, kurallar ve bilinen sınırlar: [Türkiye için kurulum rehberi](/tr/turkiye-kurulum).
+
 ## Başlangıç
 
 1. Panelde hesap açın ve **Entegrasyonlar > API anahtarları** bölümünden bir sandbox anahtarı alın.
