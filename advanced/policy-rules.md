@@ -69,3 +69,18 @@ workflow version.
    It is read-only.
 
 The dashboard has a **Policy rules** tab (admin) that does all of this visually.
+
+## Regulation profiles
+
+A profile is a ready-made workflow: steps plus policy rules for one kind of customer. Pick one in **Policy > Start from a profile**, or read the list with `GET /admin/workflows/profiles`. It creates a workflow with the profile's id (for example `tr-crypto`); you can then edit the rules like any other.
+
+| Profile | For | Steps | Notable rules |
+|---|---|---|---|
+| `eu-light` | Marketplaces, small fintech | ID, selfie, screening | Under 18, expired document, screening hit, high risk, spoofing |
+| `eu-strict` | Licensed payment, e-money, lending | + human review | + chip not read, chip failed authenticity, chip photo differs |
+| `tr-payments` | Payment and e-money firms in Turkey | ID, selfie, screening | + invalid TC number, chip rules |
+| `tr-crypto` | Crypto asset service providers in Turkey | ID, selfie, live video, screening, human review | same as `tr-payments` |
+
+::: warning A starting point, not legal advice
+Every profile reflects the public reading of a rule and is marked `confirm_with_counsel`. Check it with your compliance counsel before you rely on it. "Chip not read" holds the case for review; remove that rule if your flow has no NFC step.
+:::
