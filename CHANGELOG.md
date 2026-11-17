@@ -4,6 +4,9 @@ Changes that affect people who use the Armith API, the dashboard or the hosted p
 
 ## 2026-11-17
 
+- **Fixed** Hosted capture on the web (`/w/start`) showed "invalid link" for every session created with `POST /kyc/profiles` or `POST /kyc/hosted-sessions`, because the page expected a profile id that those calls do not return yet. The page now accepts both token types. If you saw this error on a fresh link, create a new session after updating.
+- **Added** Public benchmark of face matching on the LFW test list, with its limits: see [Threshold tuning](/advanced/threshold-tuning).
+- **Added** 21 more admin routes in the OpenAPI spec (audit, usage, regulation profiles, re-verification, workflow revisions, manual review, webhook retry, data-subject export).
 - **Added** Monthly usage report: Dashboard > Cases > "Usage CSV", or `GET /admin/account/usage/export.csv?months=12` (admin role). One row per month with the number of cases per status.
 - **Added** German and French on the hosted applicant pages (machine translation, native review is pending). The language menu lists them. Missing text falls back to English.
 - **Added** Guide: [Getting CSCA certificates](/advanced/csca-sources) and an import script that checks certificates before you load them.
