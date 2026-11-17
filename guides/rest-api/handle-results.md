@@ -30,8 +30,8 @@ User-facing messages and retry logic for each verification outcome.
 | `MISSING_IDENTITY_NUMBER` | "Could not read ID number. Please retake photo clearly." | Retake photo |
 | `INVALID_AGE` | "Age does not meet requirements." | Check age policy |
 | `LOW_DOCUMENT_VITALITY` | "Document appears to be a copy/screen. Please use original." | Use physical document |
-| `HIGH_TAMPERING_RISK` | "Document shows signs of alteration." | Manual review |
-| `MRZ_MISMATCH` | "Machine-readable zone doesn't match visual data." | Retake or manual |
+| `MRZ_CHECKSUM_INVALID` | "The document's machine-readable zone looks altered or misread." | Manual review |
+| `MRZ_CROSS_VALIDATION_FAILED` | "Machine-readable zone doesn't match visual data." | Retake or manual |
 
 ### Selfie Check Rejections
 
@@ -40,10 +40,12 @@ User-facing messages and retry logic for each verification outcome.
 | `LOW_MATCH_CONFIDENCE` | "Selfie doesn't match your ID photo. Please retake." | Retake selfie |
 | `SPOOFING_DETECTED` | "Please use a live camera — no screens, photos, or prints." | Live selfie only |
 | `NO_FACE_DETECTED` | "No face found. Center your face in the frame." | Reposition |
-| `POOR_SELFIE_QUALITY` | "Selfie is blurry/dark. Use good lighting and hold steady." | Retake |
-| `FACE_COVERAGE_LOW` | "Move closer so your face fills the frame." | Move closer |
+| `POOR_IMAGE_QUALITY` | "Selfie is blurry/dark. Use good lighting and hold steady." | Retake |
+| `INSUFFICIENT_LIGHTING` | "Not enough light. Face a window or a lamp." | Retake |
+| `FACE_TOO_SMALL` | "Move closer so your face fills the frame." | Move closer |
+| `FACE_PARTIALLY_COVERED` | "Remove anything covering your face." | Retake |
 | `MULTIPLE_FACES` | "Only one face allowed. Remove others from frame." | Solo selfie |
-| `LIVENESS_FAILED` | "Please blink and move naturally during capture." | Retake with motion |
+| `LOW_LIVENESS_CONFIDENCE` | "Please blink and move naturally during capture." | Retake with motion |
 | `BIOMETRIC_FACE_MATCH_UNAVAILABLE` | "Verification is temporarily unavailable. Please try again." | Vendor biometrics down — retry later |
 | `SANCTIONS_HIT` | Do not show details. | Compliance review |
 | `PEP_HIT` | "Under review — we'll notify you." | Wait for review |

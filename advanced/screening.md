@@ -2,7 +2,7 @@
 
 Optional post-ID step. When `requireAml` is on, extracted identity (name, DOB, nationality) is screened; results persist on the profile and can block or route to review.
 
-**Providers:** `opensanctions` (default, open source, no key) · `complyadvantage` (needs `COMPLYADVANTAGE_API_KEY`) · `dilisense`/`diligence` (commercial).
+**Providers:** `opensanctions` (default, open source, no key) · `complyadvantage` (needs `AML_VENDOR_URL` and `AML_PROVIDER_API_KEY`) · `dilisense`/`diligence` (commercial).
 
 ```bash
 curl -X PATCH "$BASE/config" -H "Authorization: Bearer $CLERK_JWT" -H "Content-Type: application/json" \
