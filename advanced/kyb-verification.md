@@ -1,5 +1,9 @@
 # Advanced: KYB (Business Verification)
 
+::: warning Experimental
+This feature is experimental. See [Feature status](/concepts/feature-status). Do not rely on it for a regulatory duty.
+:::
+
 KYB entity records are **manual CRUD only** — no automated document verification yet.
 
 - Create entity with legal name, registration number, jurisdiction (`/kyb/*`, API key or Clerk).

@@ -1,5 +1,9 @@
 # Advanced: Sovereign mode
 
+::: info Beta
+This feature is in beta and tested, but it cannot judge physical document authenticity (see below). See [Feature status](/concepts/feature-status).
+:::
+
 Read ID documents without sending anything to a third-party AI provider. Intended for deployments where applicant data must stay inside your own infrastructure or country.
 
 ## Switch it on
