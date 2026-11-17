@@ -4,6 +4,7 @@ Changes that affect people who use the Armith API, the dashboard or the hosted p
 
 ## 2026-11-17
 
+- **Changed** Deleting a personal account in the sign-in provider used to delete only the account row and leave live API keys, webhooks and applicant data behind with no owner record. It now closes the account like an organisation does (keys revoked, webhooks off, applicant data kept for retention) and erases the operator's own email and name.
 - **Fixed** An invalid request body on `POST /kyc/id-check`, `/kyc/selfie-check`, `/kyc/profiles`, `/kyc/hosted-sessions` and `/kyc/sessions/complete` answered `500 INTERNAL_ERROR` instead of `400` with the list of invalid fields (a library upgrade renamed a field the validator read). It now answers `400` with `details`.
 - **Fixed** A malformed id in an admin URL (for example in `DELETE /admin/api-keys/{id}`) answered `500`. It now answers `400 INVALID_ID`.
 - **Fixed** Calls to the admin, config and KYB admin APIs with no credentials were redirected (`302`) to the home page. They now answer `401` JSON.
