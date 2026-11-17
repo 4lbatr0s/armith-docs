@@ -36,6 +36,7 @@ and its reason on the case.
 | `chipRead` | yes/no | An NFC chip was read |
 | `chipAuthentic` | yes/no | The chip passed server-side authenticity checks |
 | `chipPhotoMatch` | yes/no | The chip photo matches the selfie |
+| `idNumberValid` | yes/no | The identity number passes its checksum. Turkey only (TC Kimlik No); unknown for other countries. A pass shows the number is well formed, not that it belongs to the applicant |
 | `ageYears` | number | Whole years by the calendar (on the birthday the person has just turned the age) |
 | `documentDaysToExpiry` | number | Days until the document expires |
 | `amlStatus`, `amlHitCount` | text, number | AML screening status and number of hits |
