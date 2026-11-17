@@ -4,6 +4,8 @@ Changes that affect people who use the Armith API, the dashboard or the hosted p
 
 ## 2026-11-17
 
+- **Fixed** Hosted capture with a **sandbox** key could not finish: the page cannot send `sandboxScenario`, so the first ID check answered `400 SANDBOX_SCENARIO_REQUIRED`. A sandbox capture session now defaults to `approved`. API-key calls still must name their scenario.
+- **Fixed** Hosted web links created through `POST /kyc/profiles` or `/kyc/hosted-sessions` showed "invalid link" (the page expected a profile id the token does not carry yet).
 - **Changed** Deleting a personal account in the sign-in provider used to delete only the account row and leave live API keys, webhooks and applicant data behind with no owner record. It now closes the account like an organisation does (keys revoked, webhooks off, applicant data kept for retention) and erases the operator's own email and name.
 - **Fixed** An invalid request body on `POST /kyc/id-check`, `/kyc/selfie-check`, `/kyc/profiles`, `/kyc/hosted-sessions` and `/kyc/sessions/complete` answered `500 INTERNAL_ERROR` instead of `400` with the list of invalid fields (a library upgrade renamed a field the validator read). It now answers `400` with `details`.
 - **Fixed** A malformed id in an admin URL (for example in `DELETE /admin/api-keys/{id}`) answered `500`. It now answers `400 INVALID_ID`.

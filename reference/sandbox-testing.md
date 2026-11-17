@@ -36,3 +36,6 @@ invented (the German one uses the official "Erika Mustermann" specimen name); ne
 **Checklist:** test happy path **and** each rejection (your UX copy), `Idempotency-Key` replay, full flow (upload → ID → selfie → status → webhook), error callbacks (`?error=cancelled/expired`) for hosted. Use `ak_test_` in all dev/CI pipelines — never `ak_live_` for tests.
 
 Video Ident has **no** `sandboxScenario`. LiveKit is stubbed only when `NODE_ENV` is `test` or `development`. Production Video Ident needs real LiveKit credentials.
+
+## Hosted capture with a sandbox key
+A link created with a sandbox key (`POST /kyc/profiles` or `/kyc/hosted-sessions`) works in the hosted capture page end to end. The applicant's browser cannot send `sandboxScenario`, so a sandbox **capture session** defaults to `approved`. Calls made with the sandbox **API key** itself must still send `sandboxScenario`; without it they answer `400 SANDBOX_SCENARIO_REQUIRED`.
