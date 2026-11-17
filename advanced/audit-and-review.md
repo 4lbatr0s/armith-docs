@@ -45,3 +45,14 @@ never both propose and confirm. If the second reviewer disagrees, their decision
 needs another look. Proposals expire after 24 hours. Both approvers are recorded in the audit chain. The API answers
 `202` with `pendingSecondApproval` until the second confirmation; `409 FOUR_EYES_SAME_PERSON` if one person tries
 twice; `409 REVIEW_STATE_CHANGED` if the case changed while the reviewer was deciding.
+
+## Documents that expire: who needs a fresh check
+
+Regulated firms must keep identity data current. List approved people whose document has expired or expires soon:
+
+```
+GET /admin/reverification/due?days=60            # JSON (reviewer role)
+GET /admin/reverification/due?days=60&format=csv # CSV download
+```
+
+`days` is 1 to 365 (default 60). Each row has the case id, country, expiry date, days left and whether it already expired, sorted by expiry date. The list holds no names or numbers, so it is safe to share. To re-check a person, create a new capture link for the case (Cases menu > capture link, or send it by WhatsApp or email).
