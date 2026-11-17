@@ -26,6 +26,8 @@ tags:
   - name: KYC
   - name: Admin
   - name: Webhooks
+  - name: Audit
+  - name: Manual review
   - name: Config
   - name: Integrator
   - name: KYB
@@ -519,6 +521,25 @@ paths:
         '200':
           description: Paginated verification list
   '/admin/verifications/{profileId}':
+    get:
+      tags: [Admin]
+      summary: One verification case in detail
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
     delete:
       tags: [Admin]
       summary: Delete verification profile
@@ -1232,20 +1253,6 @@ paths:
         '200':
           description: Saved
   /admin/data-subject/{profileId}:
-    get:
-      tags: [Admin]
-      summary: Export data-subject payload
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: profileId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Export
     delete:
       tags: [Admin]
       summary: Delete data-subject records
@@ -1262,3 +1269,337 @@ paths:
           description: Deleted
         '409':
           description: Legal hold
+  /admin/account/usage:
+    get:
+      tags: [Admin]
+      summary: Usage for the current month and plan
+      description: 'Requires: reviewer or admin dashboard session.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/account/usage/export.csv:
+    get:
+      tags: [Admin]
+      summary: Monthly usage as CSV (columns total, decided, one per status)
+      description: 'Requires: admin.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/audit-log:
+    get:
+      tags: [Audit]
+      summary: Admin audit log (tamper-evident chain)
+      description: 'Requires: audit reader.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/audit-log/acknowledge:
+    post:
+      tags: [Audit]
+      summary: Acknowledge a gap found in the audit chain
+      description: 'Requires: admin.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/audit-log/verify:
+    get:
+      tags: [Audit]
+      summary: Verify the audit chain and report where it breaks
+      description: 'Requires: audit reader.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/profiles/{profileId}/audit-pack':
+    get:
+      tags: [Audit]
+      summary: Audit pack for one case (evidence, decisions, chain state, sha256)
+      description: 'Requires: audit reader.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/settings/history:
+    get:
+      tags: [Audit]
+      summary: History of configuration changes
+      description: 'Requires: audit reader.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/data-subject/{profileId}/export':
+    get:
+      tags: [Admin]
+      summary: Export everything held about one case
+      description: 'Requires: admin.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/errors/summary:
+    get:
+      tags: [Admin]
+      summary: Summary of verification errors by code
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/reverification/due:
+    get:
+      tags: [Admin]
+      summary: Approved cases due for re-verification (add format=csv for CSV)
+      description: 'Requires: reviewer.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/verifications/{profileId}/events':
+    get:
+      tags: [Admin]
+      summary: Timeline of events for one case
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/videocall/{id}/evidence':
+    get:
+      tags: [Admin]
+      summary: Evidence of a video call session
+      description: 'Requires: reviewer.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/videocall/{id}/copilot':
+    post:
+      tags: [Admin]
+      summary: Briefing for the human agent during a video call
+      description: 'Requires: reviewer.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/workflows/profiles:
+    get:
+      tags: [Admin]
+      summary: Ready-made regulation profiles (steps, rules, advisory retention)
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/workflows/rule-catalog:
+    get:
+      tags: [Admin]
+      summary: Signals and operators available to policy rules
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  /admin/workflows/preview:
+    post:
+      tags: [Admin]
+      summary: Preview policy rules against a sample case without saving
+      description: 'Requires: admin.'
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/workflows/{workflowId}/revisions':
+    get:
+      tags: [Admin]
+      summary: Revision history of a workflow
+      description: 'Requires: dashboard session.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: workflowId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/manual-reviews/{profileId}':
+    patch:
+      tags: [Manual review]
+      summary: Update a manual review item (assignee, note)
+      description: 'Requires: reviewer.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/manual-reviews/{profileId}/enqueue':
+    post:
+      tags: [Manual review]
+      summary: Put a case into the manual review queue
+      description: 'Requires: reviewer.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: profileId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
+  '/admin/webhook-deliveries/{deliveryId}/retry':
+    post:
+      tags: [Webhooks]
+      summary: Retry a failed webhook delivery
+      description: 'Requires: admin.'
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: deliveryId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Missing or invalid credentials
+        '403':
+          description: Role not allowed
