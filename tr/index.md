@@ -11,11 +11,11 @@ Armith, uzaktan kimlik doğrulama (KYC) hizmetidir: kimlik belgesi, selfie, canl
 - **Türkiye:** küçük kripto varlık hizmet sağlayıcıları ve ödeme / elektronik para kuruluşları.
 - **Avrupa:** küçük fintech ve pazaryeri şirketleri.
 
-Büyük sağlayıcıların aylık asgari tutarı ve satış görüşmesi şartı vardır. Armith kullandıkça öder: aylık asgari tutar ve sözleşme yoktur.
+Büyük sağlayıcıların aylık asgari tutarı ve satış görüşmesi şartı vardır. Armith'te aylık asgari tutar ve sözleşme yoktur.
 
 ## Fiyat
 
-Yalnızca karara bağlanan vakalar (`APPROVED` veya `REJECTED`) faturalanır. Okuma hatası, bekleyen ve incelemedeki vakalar ücretsizdir. Ayrıntılar: [Fiyat ve faturalama](/pricing).
+Bir doğrulama, kimlik kontrolü tamamlandığında bir kez sayılır. Aylık asgari tutar ve sözleşme yoktur. Ayrıntılar: [Fiyat ve faturalama](/pricing).
 
 ## Düzenleme profilleri
 
